@@ -53,29 +53,29 @@
         table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
         th { padding: 10px 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--slate); font-weight: 600; border-bottom: 2px solid var(--border); background: var(--bg); }
         td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-        tr:hover td { background: rgba(0,0,0,0.01); }
 
         /* BADGE */
         .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; }
-        .badge-new      { background: rgba(56,189,248,0.12);  color: #0284c7; }
-        .badge-contact  { background: rgba(129,140,248,0.12); color: #6366f1; }
-        .badge-demo     { background: rgba(251,146,60,0.12);  color: #c2410c; }
-        .badge-closed   { background: rgba(52,211,153,0.12);  color: #059669; }
-        .badge-stalled  { background: rgba(248,113,113,0.12); color: #dc2626; }
-
-        /* KPI ROW */
-        .kpi-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
         .kpi-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; box-shadow: var(--shadow); }
 
         /* QUICK ACTIONS */
         .action-btn { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--charcoal); text-decoration: none; transition: 0.2s; width: 100%; margin-bottom: 8px; }
         .action-btn:hover { border-color: var(--teal); color: var(--teal); }
 
+        /* TASK LIST */
+        .task-list { margin-top: 1rem; }
+        .task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
+        .task-item:last-child { border-bottom: none; }
+        .task-check { width: 16px; height: 16px; margin-top: 2px; cursor: pointer; }
+        .task-title { font-weight: 500; }
+        .task-meta { font-size: 0.7rem; color: var(--slate); margin-top: 2px; }
+        .task-tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; background: var(--bg); font-weight: 700; margin-left: 5px; }
+
         /* SOURCE FILTER */
         .source-select { font-size: 0.78rem; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; background: var(--bg); color: var(--charcoal); outline: none; cursor: pointer; }
 
         /* ACTIONS */
-        .btn-action { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); cursor: pointer; color: var(--slate); transition: 0.2s; text-decoration: none; position: relative; }
+        .btn-action { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); cursor: pointer; color: var(--slate); transition: 0.2s; text-decoration: none; }
         .btn-action:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-1px); }
         .btn-action svg { width: 16px; height: 16px; }
         .action-group { display: flex; gap: 6px; }
@@ -102,17 +102,17 @@
     </nav>
 
     <!-- KPI ROW -->
-    <div class="kpi-row">
+    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin-bottom:1.5rem;">
         <div class="kpi-card" style="border-top:3px solid var(--teal);">
             <div class="kpi-label">Total Leads</div>
             <div class="kpi-val" id="m-total">—</div>
         </div>
         <div class="kpi-card" style="border-top:3px solid var(--prog);">
-            <div class="kpi-label">Nuevos (7d)</div>
+            <div class="kpi-label">Nuevos Leads</div>
             <div class="kpi-val" id="m-new">—</div>
         </div>
         <div class="kpi-card" style="border-top:3px solid var(--warn);">
-            <div class="kpi-label">Demo / Booked</div>
+            <div class="kpi-label">Demos Programadas</div>
             <div class="kpi-val" id="m-demo">—</div>
         </div>
     </div>
@@ -120,7 +120,6 @@
     <div class="main-grid">
         <!-- LEFT: Pipeline + table -->
         <div>
-            <!-- Funnel chart -->
             <div class="card">
                 <div class="card-header">
                     Funnel de Ventas
@@ -133,16 +132,7 @@
                 <div style="height:200px;"><canvas id="funnelChart"></canvas></div>
             </div>
 
-            <!-- Pipeline tabs -->
             <div class="card">
-                <div class="card-header">
-                    Pipeline CRM
-                    <select id="source-filter-2" class="source-select" onchange="fetchLeads()">
-                        <option value="all">Todas las fuentes</option>
-                        <option value="Elia Web Widget">Elia Web Widget</option>
-                        <option value="Manual">Manual</option>
-                    </select>
-                </div>
                 <div class="tabs">
                     <div class="tab active" onclick="switchTab('today', this)">Hoy · Acción</div>
                     <div class="tab" onclick="switchTab('pipeline', this)">Pipeline</div>
@@ -152,7 +142,7 @@
                 <!-- HOY -->
                 <div class="tab-panel active" id="tab-today">
                     <table>
-                        <thead><tr><th>Lead</th><th>Estado</th><th>Actualizado</th><th>Fuente</th></tr></thead>
+                        <thead><tr><th>Lead</th><th>Estado</th><th>Tarea actual</th><th>Acción</th></tr></thead>
                         <tbody id="tbody-today">
                             <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Cargando...</td></tr>
                         </tbody>
@@ -162,9 +152,9 @@
                 <!-- PIPELINE -->
                 <div class="tab-panel" id="tab-pipeline">
                     <table>
-                        <thead><tr><th>Lead</th><th>Estado</th><th>Actualizado</th><th>Fuente</th></tr></thead>
+                        <thead><tr><th>Lead</th><th>Estado</th><th>Actualizado</th><th>Tasks</th></tr></thead>
                         <tbody id="tbody-pipeline">
-                            <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Cargando...</td></tr>
+                            <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Pipeline cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -172,52 +162,51 @@
                 <!-- FOLLOW-UP -->
                 <div class="tab-panel" id="tab-followup">
                     <table>
-                        <thead><tr><th>Lead</th><th>Estado</th><th>Sin respuesta</th><th>Fuente</th></tr></thead>
+                        <thead><tr><th>Lead</th><th>Estado</th><th>Última Acción</th><th>Acción</th></tr></thead>
                         <tbody id="tbody-followup">
-                            <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Cargando...</td></tr>
+                            <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Sin seguimientos pendientes</td></tr>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT: Actions + Stats -->
+        <!-- RIGHT -->
         <div>
             <div class="card">
+                <div class="card-header">
+                    <span>⚡ Mis Tareas Hoy</span>
+                    <span class="badge-phase">Automatizado</span>
+                </div>
+                <div class="task-list" id="task-list-mireia">
+                    <div style="text-align:center; padding:20px; color:var(--slate);">Cargando tareas...</div>
+                </div>
+            </div>
+
+            <div class="card">
                 <div class="card-header">Acciones Rápidas</div>
-                <a href="index.html#sales" class="action-btn">📊 Ver Ventas OS</a>
+                <a href="index.html#sales" class="action-btn">📊 Ver Master Hub</a>
                 <div class="action-btn" style="opacity: 0.5; cursor: not-allowed; justify-content: space-between;">
                     <span>🎙️ Elia Voz</span>
-                    <span class="badge-phase">Fase 3</span>
+                    <span class="badge-phase">MVP</span>
                 </div>
-                <a href="jorge_dashboard.html" target="_blank" class="action-btn">⚙️ Console Jorge</a>
-                <a href="https://supabase.com" target="_blank" class="action-btn">🗄️ Supabase DB</a>
+                <a href="jorge_dashboard.html" target="_blank" class="action-btn">⚙️ Jorge Ops</a>
             </div>
+
             <div class="card">
-                <div class="card-header">Elia Web · Product Stats</div>
-                <div style="margin-bottom:14px;">
-                    <div class="kpi-label">Merchants Activos</div>
-                    <div style="font-size:1.8rem; font-weight:700;" id="m-merchants">—</div>
-                </div>
+                <div class="card-header">Elia Web Stats</div>
                 <div style="margin-bottom:14px;">
                     <div class="kpi-label">Leads via Elia</div>
                     <div style="font-size:1.8rem; font-weight:700; color:var(--teal);" id="m-elia-leads">—</div>
                 </div>
                 <div style="background:var(--bg); border-radius:10px; padding:12px; border:1px solid var(--border);">
-                    <p style="font-size:0.75rem; color:var(--slate); line-height:1.6;">Asistente web de captación · Producción activa · <strong>Source: Elia Web Widget</strong></p>
+                    <p style="font-size:0.75rem; color:var(--slate); line-height:1.6;">Procesando leads B2B en tiempo real.</p>
                 </div>
-            </div>
-            <div class="card">
-                <div class="card-header">Notas de Sesión</div>
-                <textarea id="sales-notes" placeholder="Notas de ventas, seguimientos, observaciones..."
-                    style="width:100%; height:130px; border:1px solid var(--border); border-radius:10px; padding:12px; font-family:'Inter', sans-serif; font-size:0.85rem; color:var(--charcoal); background:var(--bg); resize:none; outline:none; line-height:1.6;"
-                    oninput="localStorage.setItem('mireia_notes', this.value)"></textarea>
             </div>
         </div>
     </div>
 
     <script>
-        // ── i18n
         let lang = localStorage.getItem('ofa_lang') || 'es';
         function setLang(l) {
             lang = l; localStorage.setItem('ofa_lang', l);
@@ -225,7 +214,6 @@
             document.getElementById('btn-en').classList.toggle('active', l === 'en');
         }
 
-        // ── Tabs
         function switchTab(id, btn) {
             document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
@@ -233,49 +221,35 @@
             btn.classList.add('active');
         }
 
-        // ── Badge helper
-        function statusBadge(s) {
+        function statusSelect(leadId, currentStatus) {
             const map = {
-                'new': ['Nuevo', 'badge-new'], 'contacted': ['Contactado', 'badge-contact'],
-                'demo_scheduled': ['Demo', 'badge-demo'], 'proposal_sent': ['Propuesta', 'badge-contact'],
-                'closed_won': ['Cerrado ✓', 'badge-closed'], 'closed_lost': ['Perdido', 'badge-stalled'],
-                'stalled': ['Parado', 'badge-stalled']
+                'new': 'Nuevo', 'contacted': 'Contactado', 'interested': 'Interesado',
+                'demo_scheduled': 'Demo', 'demo_done': 'Demo Done', 'proposal_sent': 'Propuesta',
+                'closed_won': 'Cerrado ✓', 'closed_lost': 'Perdido', 'stalled': 'Parado'
             };
-            const [label, cls] = map[s] || [s, 'badge-contact'];
-            return `<span class="badge ${cls}">${label}</span>`;
+            let options = '';
+            for (const [val, label] of Object.entries(map)) {
+                options += `<option value="${val}" ${val === currentStatus ? 'selected' : ''}>${label.toUpperCase()}</option>`;
+            }
+            return `<select onchange="updateLeadStatus('${leadId}', this.value)" class="badge" style="background:var(--bg); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; font-size:0.65rem; padding:4px 8px; font-weight:700;">${options}</select>`;
         }
-        
+
         function actionButtons(contact, name) {
             if (!contact) return '';
-            const isPhone = /^\+?[\d\s-]{9,}$/.test(contact.trim());
             const cleanContact = contact.trim().replace(/\s+/g, '');
-            
+            const isPhone = /^\+?[\d\s-]{9,}$/.test(cleanContact);
             let buttons = `<div class="action-group">`;
-            
             if (isPhone) {
-                buttons += `
-                    <a href="https://wa.me/${cleanContact.replace('+', '')}" target="_blank" class="btn-action" title="WhatsApp">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.6 8.38 8.38 0 0 1 3.8.9L21 3l-1.5 4.5Z"></path></svg>
-                    </a>`;
+                buttons += `<a href="https://wa.me/${cleanContact.replace('+', '')}" target="_blank" class="btn-action" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.6 8.38 8.38 0 0 1 3.8.9L21 3l-1.5 4.5Z"></path></svg></a>`;
             } else {
-                buttons += `
-                    <a href="mailto:${cleanContact}?subject=Contacto de Elia Asistente&body=Hola ${name || ''}," class="btn-action" title="Email">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg>
-                    </a>`;
+                buttons += `<a href="mailto:${cleanContact}?subject=Contacto de Elia Asistente&body=Hola ${name || ''}," class="btn-action" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg></a>`;
             }
-            
-            buttons += `
-                <button onclick="navigator.clipboard.writeText('${cleanContact}')" class="btn-action" title="Copiar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg>
-                </button>
-            </div>`;
+            buttons += `<button onclick="navigator.clipboard.writeText('${cleanContact}')" class="btn-action" title="Copiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button></div>`;
             return buttons;
         }
 
         function fmtDate(d) { return d ? new Date(d).toLocaleDateString('es-ES') : '—'; }
-        function daysSince(d) { return d ? Math.floor((Date.now() - new Date(d))/86400000) : 0; }
 
-        // ── Supabase
         const SUPA_URL = 'https://pzjdruihfqtflugypcgl.supabase.co';
         const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
         let supa = null;
@@ -285,83 +259,103 @@
             if (!supa) return;
             const src = document.getElementById('source-filter').value;
             try {
-                let q = supa.from('leads').select('*').order('created_at', { ascending: false });
-                const { data: all } = await q;
+                const { data: all } = await supa.from('leads').select('*').order('created_at', { ascending: false });
+                const { data: pendingTasks } = await supa.from('tasks').select('*').eq('status', 'pending');
                 if (!all) return;
-
                 const filtered = src === 'all' ? all : all.filter(l => l.source === src);
-                const now = new Date();
-                const sevenDaysAgo = new Date(now - 7*86400000);
 
-                // KPIs
                 document.getElementById('m-total').textContent = filtered.length;
-                document.getElementById('m-new').textContent = filtered.filter(l => new Date(l.created_at) > sevenDaysAgo).length;
+                document.getElementById('m-new').textContent = filtered.filter(l => l.status === 'new').length;
                 document.getElementById('m-demo').textContent = filtered.filter(l => l.status === 'demo_scheduled').length;
+                document.getElementById('m-elia-leads').textContent = all.filter(l => l.source === 'Elia Web Widget').length;
 
-                // Elia stats
-                const eliaLeads = all.filter(l => l.source === 'Elia Web Widget');
-                document.getElementById('m-elia-leads').textContent = eliaLeads.length;
-
-                // ── Today: new leads or contacted in last 24h
-                const todayLeads = filtered.filter(l => daysSince(l.updated_at) === 0 || l.status === 'new');
+                // Tab: Hoy
                 const tbodyToday = document.getElementById('tbody-today');
-                tbodyToday.innerHTML = todayLeads.length
-                    ? todayLeads.slice(0,10).map(l => `<tr><td><strong>${l.name||'—'}</strong><br><span style="color:var(--slate);font-size:0.75rem;">${l.email||''}</span></td><td>${statusBadge(l.status)}</td><td>${fmtDate(l.updated_at)}</td><td>${actionButtons(l.email, l.name)}</td></tr>`).join('')
-                    : '<tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Sin acción requerida hoy</td></tr>';
+                const todayLeads = filtered.filter(l => pendingTasks.some(t => t.lead_id === l.id));
+                tbodyToday.innerHTML = todayLeads.length ? todayLeads.map(l => {
+                    const task = pendingTasks.filter(t => t.lead_id === l.id).sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0];
+                    return `<tr><td><strong>${l.name||'—'}</strong><br><span style="color:var(--slate);font-size:0.7rem;">${l.email||''}</span></td><td>${statusSelect(l.id, l.status)}</td><td style="font-size:0.75rem;"><strong>${task.title}</strong></td><td><div style="display:flex; gap:5px;">${actionButtons(l.email, l.name)}<button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></div></td></tr>`;
+                }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Sin tareas hoy</td></tr>';
 
-                // ── Pipeline: all leads
+                // Tab: Pipeline
                 const tbodyPipe = document.getElementById('tbody-pipeline');
-                tbodyPipe.innerHTML = filtered.length
-                    ? filtered.slice(0,25).map(l => `<tr><td><strong>${l.name||'—'}</strong><br><span style="color:var(--slate);font-size:0.75rem;">${l.email||''}</span></td><td>${statusBadge(l.status)}</td><td>${fmtDate(l.updated_at)}</td><td>${actionButtons(l.email, l.name)}</td></tr>`).join('')
-                    : '<tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Pipeline vacío</td></tr>';
+                tbodyPipe.innerHTML = filtered.map(l => {
+                    const tCount = pendingTasks.filter(t => t.lead_id === l.id).length;
+                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.id, l.status)}</td><td>${fmtDate(l.updated_at)}</td><td>${tCount > 0 ? `<span class="badge" style="background:var(--warn); color:white;">${tCount}</span>` : '—'}</td></tr>`;
+                }).join('');
 
-                // ── Follow-up: contacted/proposal_sent stalled 3+ days
-                const followLeads = filtered.filter(l => ['contacted','proposal_sent'].includes(l.status) && daysSince(l.updated_at) >= 3);
+                // Tab: Follow-up
                 const tbodyFollow = document.getElementById('tbody-followup');
-                tbodyFollow.innerHTML = followLeads.length
-                    ? followLeads.map(l => `<tr><td><strong>${l.name||'—'}</strong><br><span style="color:var(--slate);font-size:0.75rem;">${l.email||''}</span></td><td>${statusBadge(l.status)}</td><td><span style="color:var(--err); font-weight:600;">${daysSince(l.updated_at)}d</span> sin respuesta</td><td>${actionButtons(l.email, l.name)}</td></tr>`).join('')
-                    : '<tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Sin follow-ups pendientes 🎉</td></tr>';
+                const followLeads = filtered.filter(l => pendingTasks.some(t => t.lead_id === l.id && t.title.toLowerCase().includes('segui')));
+                tbodyFollow.innerHTML = followLeads.length ? followLeads.map(l => {
+                    const task = pendingTasks.find(t => t.lead_id === l.id && t.title.toLowerCase().includes('segui'));
+                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.id, l.status)}</td><td style="color:var(--err); font-weight:600;">${task.title}</td><td><button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></td></tr>`;
+                }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Sin seguimientos</td></tr>';
 
-                // ── Funnel chart
-                const statuses = ['new','contacted','demo_scheduled','proposal_sent','closed_won'];
-                const counts = statuses.map(s => filtered.filter(l => l.status === s).length);
-                const labels = ['Nuevo','Contactado','Demo','Propuesta','Cerrado'];
-                if (funnelChart) funnelChart.destroy();
-                funnelChart = new Chart(document.getElementById('funnelChart'), {
-                    type: 'bar',
-                    data: {
-                        labels,
-                        datasets: [{ data: counts, backgroundColor: ['rgba(56,189,248,0.7)','rgba(129,140,248,0.7)','rgba(251,146,60,0.7)','rgba(251,191,36,0.7)','rgba(52,211,153,0.7)'], borderRadius: 6, borderSkipped: false }]
-                    },
-                    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: 'rgba(0,0,0,0.04)' }, beginAtZero: true, ticks: { stepSize: 1 } } } }
-                });
-
-                // ── Merchants
-                try {
-                    const { data: merchants } = await supa.from('merchants').select('id');
-                    document.getElementById('m-merchants').textContent = merchants ? merchants.length : '—';
-                } catch(e) { document.getElementById('m-merchants').textContent = '—'; }
-
-            } catch(e) { console.error('Fetch error:', e); }
+                renderFunnelChart(filtered);
+            } catch(e) { console.error(e); }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('ofa_theme') || 'light';
-            document.documentElement.setAttribute('data-theme', savedTheme);
-            const themeIcon = document.getElementById('theme-icon');
-            if(themeIcon) themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        async function updateLeadStatus(id, newStatus) {
+            if(!supa) return;
+            try {
+                await supa.from('leads').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+                await triggerAutomatedTask(id, newStatus);
+                fetchLeads(); fetchTasks();
+            } catch(e) { console.error(e); }
+        }
 
-            const d = new Date();
-            document.getElementById('top-date').textContent = d.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' }).toUpperCase();
-            setLang(lang);
-            const saved = localStorage.getItem('mireia_notes');
-            if (saved) document.getElementById('sales-notes').value = saved;
+        async function triggerAutomatedTask(leadId, status) {
+            const TASK_MAP = {
+                'new': '🟢 Primer contacto / Cualificación', 'contacted': '🔵 Seguimiento de interés',
+                'interested': '📅 Agendar reunión / Demo', 'demo_scheduled': '🛠️ Preparar Demo personalizada',
+                'demo_done': '📝 Enviar propuesta comercial', 'proposal_sent': '⏳ Seguimiento de cierre',
+                'closed_won': '🎉 Onboarding inicial', 'closed_lost': '📁 Archivar'
+            };
+            const title = TASK_MAP[status];
+            if (!title) return;
+            try {
+                await supa.from('tasks').update({ status: 'completed' }).eq('lead_id', leadId).eq('status', 'pending');
+                await supa.from('tasks').insert([{ lead_id: leadId, title, owner: 'Mireia', category: 'SALES', status: 'pending' }]);
+            } catch(e) { console.warn(e); }
+        }
 
-            if (window.supabase) {
-                supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
-                fetchLeads();
-            }
-        });
+        async function fetchTasks() {
+            if (!supa) return;
+            try {
+                const { data: tasks } = await supa.from('tasks').select('*').eq('owner', 'Mireia').eq('status', 'pending').order('created_at', { ascending: false });
+                const list = document.getElementById('task-list-mireia');
+                if (!list) return;
+                list.innerHTML = (tasks && tasks.length) ? tasks.map(t => `<div class="task-item"><input type="checkbox" class="task-check" onclick="completeTask('${t.id}')"><div><div class="task-title">${t.title}</div><div class="task-meta">HOY · <span class="task-tag">${t.category}</span></div></div></div>`).join('') : '<div style="text-align:center; padding:20px; color:var(--slate);">Todo al día 🎉</div>';
+            } catch(e) { console.error(e); }
+        }
+
+        async function completeTask(id, leadName, taskTitle, leadStatus) {
+            if(!supa) return;
+            try {
+                await supa.from('tasks').update({ status: 'completed' }).eq('id', id);
+                if (taskTitle) {
+                    const keywords = ['Primer contacto', 'propuesta', 'Segui', 'Onboard'];
+                    if (keywords.some(k => taskTitle.toLowerCase().includes(k.toLowerCase()))) {
+                        fetch('https://n8n.optimumforall.com/webhook/ofa-slack-notifications', {
+                            method: 'POST', body: JSON.stringify({ text: `✅ *[Mireia]* ha completado: "${taskTitle}" para el lead *${leadName}* (Estado: ${leadStatus})` })
+                        }).catch(() => {});
+                    }
+                }
+                fetchLeads(); fetchTasks();
+            } catch(e) { console.error(e); }
+        }
+
+        function renderFunnelChart(leads) {
+            const statuses = ['new','contacted','demo_scheduled','proposal_sent','closed_won'];
+            const counts = statuses.map(s => leads.filter(l => l.status === s).length);
+            if (funnelChart) funnelChart.destroy();
+            funnelChart = new Chart(document.getElementById('funnelChart'), {
+                type: 'bar',
+                data: { labels: ['Nuevo','Contactado','Demo','Presu','Cierre'], datasets: [{ data: counts, backgroundColor: ['#38bdf8','#818cf8','#fb923c','#fbbf24','#34d399'], borderRadius: 6 }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            });
+        }
 
         function toggleTheme() {
             const current = document.documentElement.getAttribute('data-theme');
@@ -370,6 +364,19 @@
             localStorage.setItem('ofa_theme', target);
             document.getElementById('theme-icon').textContent = target === 'dark' ? '☀️' : '🌙';
         }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('ofa_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+            const d = new Date();
+            document.getElementById('top-date').textContent = d.toLocaleDateString('es-ES', { weekday:'short', day:'numeric', month:'short' }).toUpperCase();
+            setLang(lang);
+            if (window.supabase) {
+                supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+                fetchLeads(); fetchTasks();
+            }
+        });
     </script>
 </body>
 </html>
