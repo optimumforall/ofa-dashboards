@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA | SECURE LOGIN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --sand: #f8fafc; --teal: #38bdf8; --charcoal: #334155; --slate: #94a3b8; }
+        * { box-sizing: border-box; }
+        body { background-color: var(--sand); font-family: 'Inter', sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; background-image: radial-gradient(circle at center, rgba(56, 189, 248, 0.05) 0%, transparent 70%); }
+        .login-card { background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03); text-align: center; max-width: 400px; width: 90%; border: 1px solid #f1f5f9; }
+        .logo-wrap { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 30px; }
+        .logo-text { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 20px; color: var(--teal); }
+        h1 { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 22px; margin-bottom: 24px; color: var(--charcoal); }
+        .input-group { text-align: left; margin-bottom: 15px; position: relative; }
+        label { display: block; font-size: 12px; font-weight: 600; color: var(--slate); margin-bottom: 5px; text-transform: uppercase; }
+        input { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; color: var(--charcoal); }
+        input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.1); }
+        .eye-btn { position: absolute; right: 10px; top: 28px; background: transparent; border: none; cursor: pointer; color: var(--slate); padding: 5px; display: flex; align-items: center; justify-content: center; opacity: 0.6; transition: 0.2s; }
+        .eye-btn:hover { opacity: 1; color: var(--teal); }
+        .submit-btn { background: var(--teal); border: none; color: white; padding: 14px; border-radius: 8px; font-weight: 600; width: 100%; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .submit-btn:hover { background: #0ea5e9; transform: translateY(-1px); }
+        .submit-btn:disabled { background: #cbd5e1; cursor: not-allowed; }
+        .error-msg { color: #f87171; font-size: 12px; margin-top: 15px; display: none; padding: 10px; background: #fef2f2; border-radius: 6px; }
+        .footer-note { font-size: 10px; color: #94a3b8; margin-top: 30px; text-transform: uppercase; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-wrap">
+            <svg width="28" height="28" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M20 0C8.954 0 0 8.954 0 20s8.954 20 20 20 20-8.954 20-20S31.046 0 20 0zm0 30c-5.523 0-10-4.477-10-10S14.477 10 20 10s10 4.477 10 10-4.477 10-10 10z" fill="currentColor" style="color:var(--teal)"/>
+                <circle cx="20" cy="20" r="4" fill="currentColor" style="color:var(--teal)"/>
+            </svg>
+            <div class="logo-text">OPTIMUM FOR ALL</div>
+        </div>
+        <h1>Command Center</h1>
+        
+        <form id="login-form">
+            <div class="input-group">
+                <label>Email / Usuario</label>
+                <input type="text" id="email" placeholder="Identificación..." required>
+            </div>
+            <div class="input-group">
+                <label>Password</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+                <button type="button" class="eye-btn" onclick="togglePwd()">
+                    <svg id="eye-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path><circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </button>
+            <button type="button" class="submit-btn" id="login-btn" onclick="attemptLogin()">Sign In</button>
+            <div id="error-msg" class="error-msg"></div>
+        </form>
+
+        <div class="footer-note">Authorized Personnel Only</div>
+    </div>
+
+    <script>
+        function togglePwd() {
+            const pwd = document.getElementById('password');
+            pwd.type = pwd.type === 'password' ? 'text' : 'password';
+        }
+
+        function showError(msg) {
+            const err = document.getElementById('error-msg');
+            err.style.display = 'block';
+            err.textContent = msg;
+        }
+
+        async function attemptLogin() {
+            const btn = document.getElementById('login-btn');
+            btn.disabled = true;
+            btn.textContent = 'Authenticating...';
+            document.getElementById('error-msg').style.display = 'none';
+
+            try {
+                const email = document.getElementById('email').value.trim();
+                const password = document.getElementById('password').value.trim();
+
+                // Check if Scripts are blocked
+                if (!window.supabase) {
+                    throw new Error("Supabase is blocked by the browser. Please disable tracking protection for this domain.");
+                }
+
+                // 3. Official Cloud Auth
+                const supabaseUrl = 'https://pzjdruihfqtflugypcgl.supabase.co';
+                const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
+                const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+                
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                
+                // Fallback token to prevent bouncy redirect
+                try { localStorage.setItem('ofa_session', 'active'); } catch(e) {}
+                
+                window.location.href = './?session=active';
+            } catch (err) {
+                showError(err.message);
+                btn.disabled = false;
+                btn.textContent = 'Sign In';
+            }
+        }
+
+        // Allow Enter key
+        document.getElementById('password').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') attemptLogin();
+        });
+
+        window.onload = async () => {
+            try {
+                if (window.supabase) {
+                    const supabase = window.supabase.createClient('https://pzjdruihfqtflugypcgl.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4');
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) window.location.href = './';
+                }
+            } catch(e) {}
+        };
+    </script>
+</body>
+</html>

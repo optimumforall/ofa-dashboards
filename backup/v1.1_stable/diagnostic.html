@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>OFA Backend Diagnostic</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; }
+        .success { color: #0f0; }
+        .error { color: #f00; font-weight: bold; }
+        .info { color: #0af; }
+    </style>
+</head>
+<body>
+    <h1>OFA SYSTEM DIAGNOSTIC V1</h1>
+    <div id="output">Iniciando pruebas...<br></div>
+
+    <script>
+        function log(msg, type='info') {
+            const div = document.getElementById('output');
+            div.innerHTML += `<span class="${type}">[${new Date().toLocaleTimeString()}] ${msg}</span><br>`;
+        }
+
+        async function runTests() {
+            const url = 'https://pzjdruihfqtflugypcgl.supabase.co';
+            const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
+            
+            log("1. Verificando conectividad Supabase (URL: " + url + ")...");
+            try {
+                const supabase = window.supabase.createClient(url, key);
+                log("   - Cliente creado OK.", "success");
+                
+                log("2. Probando SELECT en 'leads'...");
+                const { data: leads, error: lError } = await supabase.from('leads').select('id').limit(1);
+                if (lError) throw lError;
+                log("   - Conexión a 'leads' EXITOSA (" + (leads ? leads.length : 0) + " registros encontrados).", "success");
+
+                log("3. Probando SELECT en 'tasks'...");
+                const { data: tasks, error: tError } = await supabase.from('tasks').select('id').limit(1);
+                if (tError) throw tError;
+                log("   - Conexión a 'tasks' EXITOSA (" + (tasks ? tasks.length : 0) + " registros encontrados).", "success");
+
+                log("4. Verificando scripts locales...");
+                const resp = await fetch('scripts/ofa_core.js');
+                if (resp.ok) {
+                    log("   - ofa_core.js ENCONTRADO en el servidor.", "success");
+                } else {
+                    log("   - ofa_core.js NO ENCONTRADO (Error: " + resp.status + ")", "error");
+                }
+
+                log("--- DIAGNÓSTICO COMPLETADO ---", "success");
+            } catch (e) {
+                log("!!! FALLO EN EL DIAGNÓSTICO: " + (e.message || e), "error");
+                console.error(e);
+            }
+        }
+
+        runTests();
+    </script>
+</body>
+</html>

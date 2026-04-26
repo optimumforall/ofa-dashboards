@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Elia Web | OFA</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            color: #1e293b;
+            text-align: center;
+        }
+        .container {
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            max-width: 500px;
+        }
+        h1 { margin-bottom: 20px; font-weight: 700; }
+        p { color: #64748b; line-height: 1.6; }
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🚀 Elia Web Demo</h1>
+        <p>Esta es una página externa de prueba para validar tu widget de Elia.</p>
+        
+        <div class="instructions">
+            <strong>Cómo probar:</strong>
+            <ol>
+                <li>Haz clic en el icono abajo a la derecha.</li>
+                <li>Habla con Elia (deja nombre y teléfono).</li>
+                <li>Verifica en tu Master OS que el lead ha llegado.</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- ELIA WEB WIDGET SNIPPET -->
+    <script 
+      src="elia.js" 
+      data-business-id="OFA_TEST_001" 
+      data-lang="es"
+      defer>
+    </script>
+
+</body>
+</html>

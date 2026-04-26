@@ -1,0 +1,15 @@
+{
+  "name": "OFA Master Hub",
+  "short_name": "OFA App",
+  "start_url": "/dashboards/mireia_dashboard.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#14b8a6",
+  "icons": [
+    {
+      "src": "../assets/noa_voice_halo_premium_1777043542494.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

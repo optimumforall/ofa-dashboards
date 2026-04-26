@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA | Tech Console – Vojislav</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #f8fafc; --white: #ffffff; --charcoal: #334155; --slate: #94a3b8;
+            --teal: #38bdf8; --border: #f1f5f9; --shadow: 0 4px 20px rgba(0,0,0,0.03);
+            --warn: #fb923c; --success: #34d399; --radius: 16px;
+        }
+        [data-theme='dark'] {
+            --bg: #0f172a; --white: #1e293b; --charcoal: #f1f5f9; --slate: #64748b;
+            --teal: #38bdf8; --border: #334155; --shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: background 0.3s, color 0.2s; }
+        body { background: var(--bg); font-family: 'Inter', sans-serif; color: var(--charcoal); padding: 2rem; min-height: 100vh; }
+
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 1rem 2rem; border-radius: var(--radius); margin-bottom: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow); }
+        .logo { font-weight: 600; color: var(--teal); font-size: 1rem; }
+        .logo span { color: var(--slate); font-weight: 400; }
+        .lang-toggle { display: flex; gap: 10px; color: var(--slate); font-size: 0.82rem; font-weight: 600; align-items: center; }
+        .lang-btn { cursor: pointer; transition: 0.2s; opacity: 0.6; }
+        .lang-btn.active { color: var(--teal); opacity: 1; font-weight: 700; }
+        .lang-separator { opacity: 0.2; }
+        .theme-toggle { cursor: pointer; font-size: 1.1rem; user-select: none; }
+        .btn-master { background: #0ea5e9; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25); transition: 0.2s; }
+        .btn-master:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(14, 165, 233, 0.35); }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 1.5rem; }
+        .grid-2-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
+        .card-header { font-weight: 600; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        .kpi-label { font-size: 0.78rem; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 500; }
+        .kpi-val { font-size: 1.8rem; font-weight: 700; }
+
+        .chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 20px; font-size: 0.72rem; font-weight: 600; }
+        .chip-online { background: rgba(52,211,153,0.12); color: #059669; }
+        .chip-warn   { background: rgba(251,146,60,0.12);  color: #c2410c; }
+        .chip-info   { background: rgba(56,189,248,0.12);  color: #0284c7; }
+        .chip-beta   { background: rgba(129,140,248,0.12); color: #6366f1; }
+
+        .log-feed { font-family: 'Fira Code', monospace; font-size: 0.78rem; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; padding: 1.2rem; height: 300px; overflow-y: auto; line-height: 2; color: var(--charcoal); }
+        .log-tag  { color: var(--slate); font-weight: 600; }
+        .log-ok   { color: #059669; font-weight: 600; }
+        .log-warn { color: var(--warn); font-weight: 600; }
+        .log-info { color: var(--teal); font-weight: 600; }
+
+        .service-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+        .service-row:last-child { border-bottom: none; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="logo" style="display:flex; align-items:center; gap:12px;">
+            <span style="filter: grayscale(1) opacity(0.7); font-size:1.2rem;">🧊</span>
+            <div style="line-height:1.2;">OFA Factory<br><span style="font-size:0.7rem; color:var(--slate); text-transform:uppercase; letter-spacing:1px; font-weight:500;">Tech Console · Vojislav</span></div>
+        </div>
+        <div class="nav-right" style="display:flex; align-items:center; gap:25px;">
+            <div class="date-chip" id="top-date"></div>
+            <div class="theme-toggle" onclick="toggleTheme()" id="theme-icon">🌙</div>
+            <div class="lang-toggle">
+                <span class="lang-btn" id="btn-es" onclick="setLang('es')">🇪🇸 ES</span>
+                <span class="lang-separator">|</span>
+                <span class="lang-btn" id="btn-en" onclick="setLang('en')">🇬🇧 EN</span>
+            </div>
+            <a href="index.html#ops" class="btn-master">← Bóveda</a>
+        </div>
+    </nav>
+
+    <div class="grid-2">
+        <!-- LEFT: Status panel -->
+        <div>
+            <div class="card" style="border-top:3px solid var(--success);">
+                <div class="kpi-label">Sistema Global</div>
+                <div class="kpi-val"><span class="chip chip-online">● ONLINE</span></div>
+                <p style="font-size:0.75rem; color:var(--slate); margin-top:12px;">OFA OS v1.2 · Supabase + Vercel</p>
+            </div>
+            <div class="card">
+                <div class="card-header">Servicios</div>
+                <div class="service-row">
+                    <span style="font-weight:500;">Supabase DB</span>
+                    <span class="chip chip-online">ONLINE</span>
+                </div>
+                <div class="service-row">
+                    <span style="font-weight:500;">Vercel Deploy</span>
+                    <span class="chip chip-online">ONLINE</span>
+                </div>
+                <div class="service-row">
+                    <span style="font-weight:500;">Elia Widget</span>
+                    <span class="chip chip-online">ACTIVO</span>
+                </div>
+                <div class="service-row">
+                    <span style="font-weight:500;">n8n Automation</span>
+                    <span class="chip chip-warn">PENDIENTE</span>
+                </div>
+                <div class="service-row">
+                    <span style="font-weight:500;">Noa Voice</span>
+                    <span class="chip chip-beta">BETA</span>
+                </div>
+                <div class="service-row">
+                    <span style="font-weight:500;">Twilio</span>
+                    <span class="chip chip-warn">EN DEV</span>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Links Técnicos</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <a href="https://supabase.com/dashboard" target="_blank" style="padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; text-decoration:none; color:var(--charcoal); font-size:0.85rem; font-weight:500; display:flex; justify-content:space-between;">Supabase Console <span style="color:var(--teal);">↗</span></a>
+                    <a href="https://vercel.com/ofa-venture-studio" target="_blank" style="padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; text-decoration:none; color:var(--charcoal); font-size:0.85rem; font-weight:500; display:flex; justify-content:space-between;">Vercel Dashboard <span style="color:var(--teal);">↗</span></a>
+                    <a href="https://github.com/optimumforall" target="_blank" style="padding:10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; text-decoration:none; color:var(--charcoal); font-size:0.85rem; font-weight:500; display:flex; justify-content:space-between;">GitHub Repo <span style="color:var(--teal);">↗</span></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Log + Notes -->
+        <div>
+            <div class="card">
+                <div class="card-header">
+                    System Log
+                    <button onclick="clearLog()" style="font-size:0.75rem; color:var(--slate); background:none; border:1px solid var(--border); border-radius:6px; padding:3px 8px; cursor:pointer;">Clear</button>
+                </div>
+                <div class="log-feed" id="log-feed">
+                    <span class="log-tag">[INIT]</span> OFA OS v1.2 iniciado correctamente<br>
+                    <span class="log-ok">[OK]</span> Autenticación Supabase validada<br>
+                    <span class="log-tag">[DB]</span> Endpoint: pzjdruihfqtflugypcgl.supabase.co<br>
+                    <span class="log-info">[WEB]</span> Elia Widget activo · Modo producción<br>
+                    <span class="log-tag">[SEC]</span> Auto-logout: 12h · habilitado<br>
+                    <span class="log-warn">[WARN]</span> n8n webhook pendiente de configurar<br>
+                    <span class="log-tag">[TECH]</span> Vojislav console cargada<br>
+                    <span class="log-info">[HTTPS]</span> TLS/SSL activo · Vercel managed
+                </div>
+            </div>
+            <div class="grid-2-eq">
+                <div class="card">
+                    <div class="kpi-label">Build Actual</div>
+                    <div style="font-size:1.5rem; font-weight:700; color:var(--charcoal);">v1.2</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-top:8px;">Ice Aesthetic · Apr 2025</p>
+                </div>
+                <div class="card">
+                    <div class="kpi-label">Auth Mode</div>
+                    <div style="font-size:1rem; font-weight:600; color:var(--charcoal); margin-top:6px;">Email/Pass</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-top:8px;">Supabase Auth · RGPD</p>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Notas Técnicas</div>
+                <textarea id="tech-notes" placeholder="Observaciones técnicas, bugs, to-dos..." 
+                    style="width:100%; height:120px; border:1px solid var(--border); border-radius:10px; padding:12px; font-family:'Inter', sans-serif; font-size:0.85rem; color:var(--charcoal); background:var(--bg); resize:none; outline:none; line-height:1.6;"
+                    oninput="localStorage.setItem('voj_notes', this.value)"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let lang = localStorage.getItem('ofa_lang') || 'es';
+        function setLang(l) {
+            lang = l; localStorage.setItem('ofa_lang', l);
+            document.getElementById('btn-es').classList.toggle('active', l === 'es');
+            document.getElementById('btn-en').classList.toggle('active', l === 'en');
+        }
+        function clearLog() {
+            document.getElementById('log-feed').innerHTML = '<span class="log-tag">[CLEAR]</span> Log cleared<br>';
+        }
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('ofa_theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            const themeIcon = document.getElementById('theme-icon');
+            if(themeIcon) themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+            const d = new Date();
+            document.getElementById('top-date').textContent = d.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' }).toUpperCase();
+            setLang(lang);
+            const saved = localStorage.getItem('voj_notes');
+            if (saved) document.getElementById('tech-notes').value = saved;
+        });
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('ofa_theme', target);
+            document.getElementById('theme-icon').textContent = target === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+</body>
+</html>

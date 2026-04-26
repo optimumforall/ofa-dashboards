@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'></script>
+    <script src='auth.js'></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GUEST | OFA ONBOARDING</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-master: #f8fafc; --charcoal: #334155; --slate: #94a3b8;
+            --ofa-teal: #38bdf8; --glass: rgba(255, 255, 255, 0.9);
+            --border: #f1f5f9; --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+            --font-head: 'Inter', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-master);
+            color: var(--charcoal);
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .navbar { display: flex; justify-content: space-between; align-items: center; background: white; padding: 1rem 2.5rem; border-radius: 16px; margin-bottom: 2rem; box-shadow: var(--card-shadow); max-width: 1000px; margin: 0 auto 2rem auto; border: 1px solid var(--border); }
+        .logo { font-family: var(--font-head); font-weight: 600; color: var(--ofa-teal); }
+        .btn { padding: 0.6rem 1.2rem; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; background: white; transition: 0.2s; display: flex; align-items: center; gap: 5px; text-decoration: none; color: inherit; }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-family: var(--font-head);
+            font-weight: 600;
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .welcome-card {
+            background: white;
+            color: var(--charcoal);
+            padding: 40px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+            box-shadow: var(--card-shadow);
+            border: 1px solid var(--border);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 24px;
+            border-radius: 16px;
+            transition: transform 0.2s;
+            box-shadow: var(--card-shadow);
+        }
+
+        .card:hover { transform: translateY(-4px); }
+
+        h2 { font-family: var(--font-head); font-size: 20px; font-weight: 600; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; }
+
+        .step { display: flex; gap: 15px; margin-bottom: 20px; }
+        .step-num { 
+            background: var(--border); 
+            color: var(--charcoal); 
+            width: 24px; height: 24px; 
+            border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 12px; font-weight: 600; flex-shrink: 0;
+        }
+
+        .link-button {
+            display: inline-block;
+            background: var(--border);
+            color: var(--charcoal);
+            padding: 10px 20px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+        .link-button:hover {
+            background: var(--ofa-teal);
+            color: white;
+        }
+
+        .tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; background: #eee; margin-right: 5px; }
+
+    </style>
+</head>
+    <nav class="navbar">
+        <div class="logo">OFA Console | <span style="font-weight:400; opacity:0.7;">GUEST</span></div>
+        <div style="display:flex; align-items:center; gap:20px;">
+            <a href="index.html" class="btn" style="background:var(--ofa-teal); color:white; border:none; box-shadow: 0 4px 10px rgba(56,189,248,0.2);">← MASTER CONTROL</a>
+        </div>
+    </nav>
+    <div class="container">
+
+        <div class="welcome-card">
+            <h2>👋 Hello, Guest!</h2>
+            <p>You’ve been invited to collaborate with the OFA team. We specialize in ND-friendly AI Voice Agents (like Noa). This dashboard will guide you through your first 48 hours here.</p>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h2>📋 Onboarding Checklist</h2>
+                <div class="step">
+                    <div class="step-num">1</div>
+                    <div>
+                        <p><strong>Review Architecture</strong></p>
+                        <p style="font-size: 13px; color: #64748b;">Read the OFA Ecosystem spec in the /tech folder.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">2</div>
+                    <div>
+                        <p><strong>Airtable Sync</strong></p>
+                        <p style="font-size: 13px; color: #64748b;">Request access to the OFA Operations base.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-num">3</div>
+                    <div>
+                        <p><strong>System Setup</strong></p>
+                        <p style="font-size: 13px; color: #64748b;">Sync your personal Gmail with the OFA shared drive.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>🛠️ Quick Links</h2>
+                <p style="margin-bottom: 20px; font-size: 14px;">Essential tools for your daily tasks:</p>
+                <a href="https://airtable.com/" class="link-button">Airtable Ops</a><br>
+                <a href="#" class="link-button">Shared Docs</a><br>
+                <a href="https://github.com/optimumforall" class="link-button">GitHub Repo</a>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 30px;">
+            <h2>💡 About Optimum For All</h2>
+            <p style="font-size: 14px; color: #64748b;">We believe in an accessible future. Our mission is to build digital tools that adapt to the user's mind, not the other way around. Welcome to the mission.</p>
+        </div>
+    </div>
+</body>
+</html>
+

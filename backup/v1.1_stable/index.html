@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA Operating System | Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- External Libs -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="scripts/ofa_core.js"></script>
+
+    <style>
+        :root {
+            --bg-master: #f1f5f9; --bg-sidebar: #0f172a; --bg-card: #ffffff;
+            --charcoal: #1e293b; --slate: #64748b; --slate-light: #cbd5e1;
+            --ofa-teal: #14b8a6; --border: #e2e8f0; --bg-dark-card: #1e293b;
+            --status-new: #10b981; --status-prog: #3b82f6; --status-warn: #f59e0b; --status-err: #ef4444;
+            --radius-lg: 16px; --radius-md: 10px; --shadow-subtle: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            --font-head: 'Outfit', sans-serif; --font-body: 'Inter', sans-serif; --font-mono: 'Fira Code', monospace;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-body); background-color: var(--bg-master); color: var(--charcoal); height: 100vh; display: flex; overflow: hidden; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 250px; background-color: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; flex-shrink: 0; }
+        .logo-area { font-family: var(--font-head); font-weight: 700; font-size: 1.4rem; color: var(--ofa-teal); margin-bottom: 3rem; letter-spacing: -0.5px; }
+        .nav-menu { display: flex; flex-direction: column; gap: 0.5rem; }
+        .nav-btn { background: transparent; border: none; color: var(--slate-light); text-align: left; padding: 0.8rem 1rem; border-radius: var(--radius-md); cursor: pointer; font-family: var(--font-body); font-weight: 500; font-size: 0.95rem; transition: 0.2s; display: flex; align-items: center; gap: 12px; }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.05); color: white; }
+        .nav-btn.active { background: rgba(20, 184, 166, 0.15); color: var(--ofa-teal); font-weight: 600; border-left: 3px solid var(--ofa-teal); border-radius: 0 8px 8px 0; }
+        
+        .main-view { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .top-glass { position: sticky; top: 0; z-index: 100; background: rgba(241, 245, 249, 0.8); backdrop-filter: blur(12px); padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+        .module { display: none; padding: 2rem 3rem; animation: fadeIn 0.4s ease; }
+        .module.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* GRID & CARDS */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+        .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-subtle); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .card-dark { background: var(--bg-dark-card); color: white; border-color: var(--bg-dark-card); }
+        .card-header { font-weight: 600; font-family: var(--font-head); margin-bottom: 1rem; border-bottom: 1px solid var(--border); display:flex; justify-content: space-between; align-items:center; padding-bottom: 10px; }
+        .kpi-title { font-size: 0.85rem; color: var(--slate); font-weight: 500; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .kpi-val { font-size: 2.2rem; font-weight: 700; font-family: var(--font-head); }
+        
+        .table-wrap { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 0.8rem; border-bottom: 1px solid var(--border); text-align: left; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.7rem; }
+        
+        input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; width: 100%; }
+        .btn-action { background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.75rem; padding: 4px 8px; border-radius:6px; cursor:pointer;}
+        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1rem; gap: 1rem; }
+        .tab { padding: 0.5rem 1rem; cursor: pointer; font-weight: 600; color: var(--slate); border-bottom: 2px solid transparent; }
+        .tab.active { color: var(--ofa-teal); border-bottom-color: var(--ofa-teal); }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+    </style>
+
+    <script>
+        // 1. Navigation Logic (Head-loaded to be ready instantly)
+        const TITLES = {
+            'home': 'Global Overview', 'sales': 'Sales Console & CRM', 'factory': 'App Factory & IP',
+            'marketing': 'Marketing & Ingestion', 'finance': 'Treasury & Burn Rate', 'ops': 'Ops & Secret Vault'
+        };
+
+        function switchModule(modId, btnElement) {
+            console.log("Navigating to:", modId);
+            try {
+                document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                const targetMod = document.getElementById('module-' + modId);
+                if(targetMod) targetMod.classList.add('active');
+                if(btnElement) btnElement.classList.add('active');
+                const titleNode = document.getElementById('top-title');
+                if(titleNode && TITLES[modId]) titleNode.textContent = TITLES[modId];
+                window.dispatchEvent(new Event('resize'));
+            } catch(e) { console.error("Nav Error:", e); }
+        }
+
+        function switchInnerTab(prefix, tabId, btnElement) {
+            try {
+                const container = btnElement.closest('.card');
+                container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.getElementById(prefix + '-' + tabId).classList.add('active');
+                btnElement.classList.add('active');
+            } catch(e) {}
+        }
+    </script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo-area">OFA Factory<span style="font-size:0.8rem; color:var(--slate); display:block;font-weight:400;">Operating System</span></div>
+        <nav class="nav-menu">
+            <button class="nav-btn active" onclick="switchModule('home', this)">🦅 Overview</button>
+            <button class="nav-btn" onclick="switchModule('sales', this)">🤝 Sales CRM</button>
+            <button class="nav-btn" onclick="switchModule('factory', this)">🚀 App Factory</button>
+            <button class="nav-btn" onclick="switchModule('marketing', this)">📈 Marketing</button>
+            <button class="nav-btn" onclick="switchModule('finance', this)">💰 Finance</button>
+            <button class="nav-btn" onclick="switchModule('ops', this)">⚙️ Ops & Vault</button>
+        </nav>
+        <div class="footer-note" style="margin-top:auto;">V1.1 Stable</div>
+    </aside>
+
+    <main class="main-view">
+        <div class="top-glass">
+            <h1 class="page-title" id="top-title">Global Overview</h1>
+            <div id="top-date">Cargando...</div>
+        </div>
+
+        <!-- MODULES -->
+        <section id="module-home" class="module active">
+            <div class="card card-dark" style="background: linear-gradient(135deg, #1e293b 0%, #000 100%);">
+                <h2>Hola, Equipo.</h2>
+                <p style="color: var(--slate-light);">OFA OS está en línea. Sistema de control de Venture Studio activo.</p>
+            </div>
+            <div class="grid-4">
+                <div class="card"><div class="kpi-title">Ingresos</div><div class="kpi-val">€ 0</div></div>
+                <div class="card"><div class="kpi-title">Leads</div><div class="kpi-val" id="g-leads-count">--</div></div>
+                <div class="card"><div class="kpi-title">Citas</div><div class="kpi-val">--</div></div>
+                <div class="card"><div class="kpi-title">Salud</div><div class="kpi-val" style="color:var(--status-new);">99%</div></div>
+            </div>
+            <div class="grid-2">
+                <div class="card"><div class="card-header">Recientes</div><div id="home-recent-leads">Cargando...</div></div>
+                <div class="card"><div class="card-header">Agentes</div><div id="home-agent-logs">...</div></div>
+            </div>
+        </section>
+
+        <section id="module-sales" class="module">
+            <div class="grid-2-1">
+                <div class="card"><div class="card-header">Funnel</div><div style="height:250px;"><canvas id="salesChart"></canvas></div></div>
+                <div class="card card-dark" style="text-align:center;"><div class="kpi-title">Conversión</div><div class="kpi-val" id="sales-conv-rate">--%</div></div>
+            </div>
+            <div class="card">
+                <div class="tabs">
+                    <div class="tab active" onclick="switchInnerTab('sales', 'hoy', this)">Hoy</div>
+                    <div class="tab" onclick="switchInnerTab('sales', 'pipe', this)">Pipeline</div>
+                </div>
+                <div class="tab-panel active" id="sales-hoy"><table><thead><tr><th>Lead</th><th>Status</th></tr></thead><tbody id="crm-hoy-tbody"></tbody></table></div>
+                <div class="tab-panel" id="sales-pipe"><table><thead><tr><th>Lead</th><th>Source</th></tr></thead><tbody id="crm-pipe-tbody"></tbody></table></div>
+            </div>
+        </section>
+
+        <section id="module-factory" class="module">
+             <div class="card">
+                <div class="card-header">Internal IP Portfolio</div>
+                <table>
+                    <thead><tr><th>Producto</th><th>Status</th><th>Próximo paso</th></tr></thead>
+                    <tbody>
+                        <tr><td>OFA-Core</td><td><span class="badge" style="background:var(--status-new);color:white;">Live</span></td><td>Fase 2 Embeddings</td></tr>
+                        <tr><td>Noa AI</td><td><span class="badge" style="background:var(--status-prog);color:white;">Beta</span></td><td>App Store Prep</td></tr>
+                    </tbody>
+                </table>
+             </div>
+        </section>
+
+        <section id="module-marketing" class="module">
+            <div class="grid-2">
+                <div class="card"><div class="card-header">Sources</div><canvas id="mktChart" style="height:250px;"></canvas></div>
+                <div class="card">
+                    <div class="card-header">Outbound Activity</div>
+                    <input type="number" id="mkt-outbound-input" style="font-size:2rem; width:120px;">
+                </div>
+            </div>
+        </section>
+
+        <section id="module-finance" class="module">
+            <div class="grid-3">
+                <div class="card"><div class="kpi-title">Caja</div><input type="number" id="fin-caja" value="0" style="font-size:2rem;"></div>
+                <div class="card"><div class="kpi-title">Burn</div><input type="number" id="fin-burn" value="0" style="font-size:2rem; color:red;"></div>
+                <div class="card card-dark"><div class="kpi-title">Runway</div><div class="kpi-val" id="fin-runway">--</div></div>
+            </div>
+        </section>
+
+        <section id="module-ops" class="module">
+            <div class="card card-dark">
+                <div class="card-header">Vault</div>
+                <table>
+                    <tbody>
+                        <tr><td>Supabase</td><td><a href="https://supabase.com" style="color:var(--ofa-teal);">Dashboard</a></td></tr>
+                        <tr><td>Vercel</td><td><a href="https://vercel.com" style="color:var(--ofa-teal);">Deployments</a></td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card">
+                <div class="card-header">Events</div>
+                <div id="ops-raw-tbody" style="font-family:monospace; font-size:0.8rem; background:#000; color:#0f0; padding:10px; height:200px; overflow-y:auto;"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // 2. Data Logic
+        let supabase = null;
+        let sChart = null;
+        let mChart = null;
+
+        function saveLocal(k, v) { localStorage.setItem(k, v); }
+        function loadLocal(k, d) { return localStorage.getItem(k) || d; }
+
+        function calcFinance() {
+            try {
+                const c = parseFloat(document.getElementById('fin-caja').value) || 0;
+                const b = parseFloat(document.getElementById('fin-burn').value) || 0;
+                saveLocal('fin_caja', c); saveLocal('fin_burn', b);
+                const rwNode = document.getElementById('fin-runway');
+                if(!rwNode) return;
+                const rw = b > 0 ? (c/b).toFixed(1) : '∞';
+                rwNode.textContent = rw + ' M';
+            } catch(e) {}
+        }
+
+        async function fetchAllData() {
+            if(!window.supabase || !supabase) return;
+            try {
+                const { data: leads } = await supabase.from('leads').select('*').limit(50);
+                if(leads) {
+                    document.getElementById('g-leads-count').textContent = leads.length;
+                    document.getElementById('home-recent-leads').innerHTML = leads.slice(0,5).map(l => `<div>${l.name || l.email}</div>`).join('');
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('top-date').textContent = new Date().toLocaleDateString();
+            
+            try {
+                const url = 'https://pzjdruihfqtflugypcgl.supabase.co';
+                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
+                if(window.supabase) supabase = window.supabase.createClient(url, key);
+            } catch(e) {}
+
+            const cj = document.getElementById('fin-caja');
+            const bn = document.getElementById('fin-burn');
+            if(cj) { cj.value = loadLocal('fin_caja', 0); cj.oninput = calcFinance; }
+            if(bn) { bn.value = loadLocal('fin_burn', 0); bn.oninput = calcFinance; }
+            
+            calcFinance();
+            fetchAllData();
+        });
+    </script>
+</body>
+</html>

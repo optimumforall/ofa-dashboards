@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA Operating System | Hub</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    
+    <!-- External Libs -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-master: #f8fafc; --bg-sidebar: #0f172a; --bg-card: #ffffff;
+            --charcoal: #334155; --slate: #94a3b8; --slate-light: #cbd5e1;
+            --ofa-teal: #38bdf8; --border: #f1f5f9; --bg-dark-card: #ffffff;
+            --status-new: #38bdf8; --status-prog: #818cf8; --status-warn: #fb923c; --status-err: #f87171;
+            --radius-lg: 16px; --radius-md: 8px; --shadow-subtle: 0 4px 20px rgba(0, 0, 0, 0.03);
+            --font-head: 'Inter', sans-serif; --font-body: 'Inter', sans-serif; --font-mono: 'Fira Code', monospace;
+        }
+        
+        /* DARK MODE VARS */
+        [data-theme='dark'] {
+            --bg-master: #0f172a; --bg-sidebar: #020617; --bg-card: #1e293b;
+            --charcoal: #f1f5f9; --slate: #64748b; --slate-light: #94a3b8;
+            --ofa-teal: #38bdf8; --border: #334155; --bg-dark-card: #1e293b;
+            --shadow-subtle: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-body); background-color: var(--bg-master); color: var(--charcoal); height: 100vh; display: flex; overflow: hidden; transition: background 0.3s, color 0.3s; }
+        
+        /* SIDEBAR */
+        .sidebar { width: 250px; background-color: var(--bg-sidebar); color: white; display: flex; flex-direction: column; padding: 2rem 1.5rem; flex-shrink: 0; position: sticky; top: 0; height: 100vh; }
+        .logo-area { font-family: var(--font-head); font-weight: 600; font-size: 1.25rem; color: var(--ofa-teal); margin-bottom: 2.5rem; display: flex; align-items: center; gap: 10px; }
+        .nav-menu { display: flex; flex-direction: column; gap: 4px; }
+        .nav-btn { background: transparent; border: none; color: var(--slate-light); text-align: left; padding: 10px 16px; border-radius: var(--radius-md); cursor: pointer; font-family: var(--font-body); font-weight: 500; font-size: 0.9rem; transition: 0.2s; display: flex; align-items: center; gap: 10px; width: 100%; border-left: 3px solid transparent; }
+        .nav-btn:hover { background: rgba(255, 255, 255, 0.05); color: white; }
+        .nav-btn.active { background: rgba(56, 189, 248, 0.1); color: var(--ofa-teal); font-weight: 600; border-left: 3px solid var(--ofa-teal); border-radius: 0 8px 8px 0; }
+        .nav-btn span { white-space: nowrap; }
+
+        .main-view { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; position: relative; }
+        .top-glass { position: sticky; top: 0; z-index: 100; background: var(--bg-card); opacity: 0.95; backdrop-filter: blur(12px); padding: 1.5rem 3rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border); transition: 0.3s; }
+        .module { display: none; padding: 2rem 3rem; animation: fadeIn 0.4s ease; }
+        .module.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* GRID & CARDS */
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+        .card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 1.5rem; box-shadow: var(--shadow-subtle); border: 1px solid var(--border); margin-bottom: 1.5rem; }
+        .card-header { font-weight: 600; font-family: var(--font-head); margin-bottom: 1rem; border-bottom: 1px solid var(--border); display:flex; justify-content: space-between; align-items:center; padding-bottom: 10px; }
+        .kpi-title { font-size: 0.85rem; color: var(--slate); font-weight: 500; text-transform: uppercase; margin-bottom: 0.5rem; }
+        .kpi-val { font-size: 2.2rem; font-weight: 700; font-family: var(--font-head); }
+        
+        .table-wrap { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        th, td { padding: 0.8rem; border-bottom: 1px solid var(--border); text-align: left; }
+        .badge { padding: 4px 8px; border-radius: 6px; font-weight: 600; font-size: 0.7rem; }
+        
+        input { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; outline: none; width: 100%; color: var(--charcoal); background: var(--bg-master); }
+        .tab-panel.active { display: block; }
+
+        /* USER PROFILE TOP-RIGHT */
+        .user-profile { display: flex; align-items: center; gap: 12px; padding: 6px 12px; border-radius: 50px; background: var(--bg-master); border: 1px solid var(--border); cursor: pointer; transition: 0.2s; }
+        .user-profile:hover { box-shadow: var(--shadow-subtle); border-color: var(--ofa-teal); }
+        .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--ofa-teal), var(--status-prog)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.8rem; }
+        .user-info { text-align: left; line-height: 1.2; }
+        .user-name { font-size: 0.85rem; font-weight: 600; display: block; }
+        .user-role { font-size: 0.7rem; color: var(--slate); display: block; }
+        
+        .badge-phase { background: #fee2e2; color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+    </style>
+
+    <script>
+        let currentLang = localStorage.getItem('ofa_lang') || 'es';
+        const translations = {
+            es: {
+                'nav-home': 'Vista General', 'nav-sales': 'Ventas CRM', 'nav-factory': 'App Factory',
+                'nav-marketing': 'Marketing', 'nav-finance': 'Finanzas', 'nav-clients': 'Clientes',
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-settings': 'Configuración'
+            },
+            en: {
+                'nav-home': 'Overview', 'nav-sales': 'Sales CRM', 'nav-factory': 'App Factory',
+                'nav-marketing': 'Marketing', 'nav-finance': 'Finance', 'nav-clients': 'Clients',
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-settings': 'Settings'
+            }
+        };
+
+        function t(key) { return translations[currentLang][key] || key; }
+
+        function updateUI() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+            // Update Lang Toggle Style (Header Only now)
+            const isEs = currentLang === 'es';
+            const es = document.getElementById('btn-lang-es');
+            const en = document.getElementById('btn-lang-en');
+            if(es && en) {
+                es.style.color = isEs ? 'var(--ofa-teal)' : 'var(--slate)';
+                es.style.fontWeight = isEs ? '700' : '500';
+                es.style.opacity = isEs ? '1' : '0.6';
+                en.style.color = !isEs ? 'var(--ofa-teal)' : 'var(--slate)';
+                en.style.fontWeight = !isEs ? '700' : '500';
+                en.style.opacity = !isEs ? '1' : '0.6';
+            }
+
+            const activeNav = document.querySelector('.nav-btn.active');
+            if(activeNav) {
+                const modId = activeNav.getAttribute('data-mod');
+                const titleNode = document.getElementById('top-title');
+                if(titleNode) titleNode.textContent = t('nav-' + modId);
+            }
+        }
+
+        function setLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('ofa_lang', lang);
+            updateUI();
+        }
+
+        function switchModule(modId, btnElement) {
+            document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            const targetMod = document.getElementById('module-' + modId);
+            if(targetMod) targetMod.classList.add('active');
+            if(btnElement) btnElement.classList.add('active');
+            updateUI();
+        }
+
+        function switchInnerTab(prefix, tabId, btnElement) {
+            const container = btnElement.closest('.module') || document;
+            container.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+            container.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            const target = document.getElementById(prefix + '-' + tabId);
+            if(target) target.classList.add('active');
+            btnElement.classList.add('active');
+        }
+
+        function addLogEntry(msg, type='SYSTEM') {
+            const logBox = document.getElementById('ops-raw-tbody');
+            if(!logBox) return;
+            const now = new Date().toLocaleTimeString();
+            const color = type === 'WEB' ? 'var(--ofa-teal)' : 'var(--slate)';
+            logBox.innerHTML = `<span style="color:${color}; font-weight:600;">[${type}]</span> ${msg} (${now})<br>` + logBox.innerHTML;
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('ofa_theme', target);
+            document.getElementById('theme-toggle-icon').textContent = target === 'dark' ? '☀️' : '🌙';
+        }
+    </script>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo-area">
+            <span style="font-size:1.5rem; filter: grayscale(1) opacity(0.8);">🧊</span>
+            <div>OFA Factory<span style="font-size:0.75rem; color:var(--slate); display:block;font-weight:400; margin-top:-2px;">Operating System</span></div>
+        </div>
+        <nav class="nav-menu">
+            <button class="nav-btn active" data-mod="home" onclick="switchModule('home', this)"><span>🧊</span><span data-i18n="nav-home">Vista General</span></button>
+            <button class="nav-btn" data-mod="sales" onclick="switchModule('sales', this)"><span>🤝</span><span data-i18n="nav-sales">Ventas CRM</span></button>
+            <button class="nav-btn" data-mod="clients" onclick="switchModule('clients', this)"><span>👥</span><span data-i18n="nav-clients">Clientes</span></button>
+            <button class="nav-btn" data-mod="factory" onclick="switchModule('factory', this)"><span>🚀</span><span data-i18n="nav-factory">App Factory</span></button>
+            <button class="nav-btn" data-mod="marketing" onclick="switchModule('marketing', this)"><span>📈</span><span data-i18n="nav-marketing">Marketing</span></button>
+            <button class="nav-btn" data-mod="legal" onclick="switchModule('legal', this)"><span>⚖️</span><span data-i18n="nav-legal">Legal & Docs</span></button>
+            <button class="nav-btn" data-mod="finance" onclick="switchModule('finance', this)"><span>💰</span><span data-i18n="nav-finance">Finanzas</span></button>
+            <button class="nav-btn" data-mod="ops" onclick="switchModule('ops', this)"><span>🛠️</span><span data-i18n="nav-ops">Ops & Bóveda</span></button>
+            <button class="nav-btn" data-mod="settings" onclick="switchModule('settings', this)"><span>⚙️</span><span data-i18n="nav-settings">Configuración</span></button>
+        </nav>
+        
+        <div class="footer-note" style="margin-top:auto; padding: 1.5rem 0; border-top: 1px solid var(--border);">
+            <div style="font-size:0.7rem; color:var(--slate); margin-top:5px;">OFA OS V1.4 Stable</div>
+            <div style="font-size:0.6rem; color:var(--slate); margin-top:5px; opacity:0.5;">© 2026 Optimum For All</div>
+        </div>
+    </aside>
+
+    <main class="main-view">
+        <header class="top-glass">
+            <div>
+                <h1 id="top-title" style="font-size:1.5rem; font-weight:700;">Vista General</h1>
+                <div id="top-date-long" style="font-size:0.75rem; color:var(--slate); margin-top:2px;"></div>
+            </div>
+            <div style="display:flex; align-items:center; gap:25px;">
+                <div id="theme-toggle" onclick="toggleTheme()" style="cursor:pointer; font-size:1.1rem; user-select:none;" id="theme-toggle-icon">🌙</div>
+                <div style="display:flex; align-items:center; gap:15px; color:var(--slate); font-size:0.85rem; font-weight:600;">
+                    <span id="btn-lang-es" style="cursor:pointer;" onclick="setLang('es')">ES</span>
+                    <span style="opacity:0.2;">|</span>
+                    <span id="btn-lang-en" style="cursor:pointer;" onclick="setLang('en')">EN</span>
+                </div>
+                <div class="user-profile" onclick="location.href='login.html'">
+                    <div class="avatar">MO</div>
+                    <div class="user-info">
+                        <span class="user-name">Mireia OFA</span>
+                        <span class="user-role">Administrator</span>
+                    </div>
+                    <span style="font-size:0.8rem; color:var(--slate); margin-left:5px;">▼</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- HOME -->
+        <section id="module-home" class="module active">
+            <div class="grid-4">
+                <div class="card" style="border-left:3px solid var(--ofa-teal);">
+                    <div class="kpi-title">Total Leads (30d)</div>
+                    <div class="kpi-val" id="g-leads-total">--</div>
+                </div>
+                <div class="card" style="border-left:3px solid var(--status-prog);">
+                    <div class="kpi-title">Nuevos (7d)</div>
+                    <div class="kpi-val" id="g-leads-7d">--</div>
+                </div>
+                <div class="card" style="border-left:3px solid var(--status-warn);">
+                    <div class="kpi-title">Demos Programadas</div>
+                    <div class="kpi-val" id="g-leads-demos">--</div>
+                </div>
+                <div class="card" style="border-left:3px solid #a78bfa;">
+                    <div class="kpi-title">Elia Web (Live)</div>
+                    <div class="kpi-val" id="g-leads-elia">--</div>
+                </div>
+            </div>
+
+            <!-- NUEVA SECCION DE AGENTES CREADOS -->
+            <div class="card" style="background: linear-gradient(to right, rgba(56, 189, 248, 0.05), transparent);">
+                <div class="card-header">🤖 Nuestros Agentes & Consolas [LIVE]</div>
+                <div class="grid-4" style="gap:1rem;">
+                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
+                        <div style="font-weight:700; font-size:0.9rem;">Elia Web Agent</div>
+                        <div style="font-size:0.7rem; color:var(--slate);">Captación de Leads</div>
+                        <a href="demo_elia.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Demo Hub ↗</a>
+                    </div>
+                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
+                        <div style="font-weight:700; font-size:0.9rem;">Mireia Console</div>
+                        <div style="font-size:0.7rem; color:var(--slate);">Sales & Management</div>
+                        <a href="mireia_dashboard.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Acceso ↗</a>
+                    </div>
+                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
+                        <div style="font-weight:700; font-size:0.9rem;">Jorge Console</div>
+                        <div style="font-size:0.7rem; color:var(--slate);">Operations & Core</div>
+                        <a href="jorge_dashboard.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Acceso ↗</a>
+                    </div>
+                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
+                        <div style="font-weight:700; font-size:0.9rem;">Vojislav Console</div>
+                        <div style="font-size:0.7rem; color:var(--slate);">Technical Dashboard</div>
+                        <a href="vojislav_dashboard.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Acceso ↗</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">Últimos Leads Captados</div>
+                    <div class="table-wrap">
+                        <table id="home-leads-table">
+                            <thead><tr><th>Nombre</th><th>Empresa</th><th>Fecha</th></tr></thead>
+                            <tbody id="home-leads-tbody"><tr><td colspan="3">Cargando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Checklist Operativo</div>
+                    <div style="font-size:0.9rem; display:flex; flex-direction:column; gap:12px;">
+                        <label><input type="checkbox" checked disabled> Revisar Leads Diarios</label>
+                        <label><input type="checkbox" checked disabled> Sync Supabase Cloud</label>
+                        <label><input type="checkbox" id="check-n8n"> <a href="https://n8n.io" target="_blank" style="color:inherit; text-decoration:none;">Activar n8n Webhook ↗</a></label>
+                        <label><input type="checkbox"> Test Elia Web Widget</label>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SALES CRM -->
+        <section id="module-sales" class="module">
+            <div class="tabs">
+                <div class="tab active" onclick="switchInnerTab('sales', 'hoy', this)">📅 Hoy</div>
+                <div class="tab" onclick="switchInnerTab('sales', 'pipeline', this)">📊 Pipeline</div>
+            </div>
+            <div id="sales-hoy" class="tab-panel active">
+                <div class="card">
+                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                        <span>Lead Feed (Tiempo real)</span>
+                        <select id="crm-source-filter" onchange="fetchData()" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:0.75rem; background:var(--white);">
+                            <option value="all">Filtro: Todos</option>
+                            <option value="Elia Web Widget">Elia Web Widget</option>
+                            <option value="Directo">Directo</option>
+                        </select>
+                    </div>
+                    <div class="table-wrap">
+                        <table style="width:100%;">
+                            <thead><tr><th>Lead</th><th>Origen</th><th>Estado</th><th>Accion</th></tr></thead>
+                            <tbody id="crm-leads-full">
+                                <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Cargando CRM...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div id="sales-pipeline" class="tab-panel">
+                <div class="card" style="text-align:center; padding:50px; color:var(--slate);">
+                    Visualización de Pipeline en desarrollo · Use la pestaña 'Hoy' para gestión de datos.
+                </div>
+            </div>
+        </section>
+
+        <!-- CLIENTS -->
+        <section id="module-clients" class="module">
+            <div class="grid-4">
+                <div class="card">
+                    <div class="kpi-title">Clientes Totales</div>
+                    <div class="kpi-val">04</div>
+                </div>
+                <div class="card">
+                    <div class="kpi-title">MRR Proyectado</div>
+                    <div class="kpi-val">€ 1.2k</div>
+                </div>
+                <div class="card">
+                    <div class="kpi-title">Uso Promedio IA</div>
+                    <div class="kpi-val">84%</div>
+                </div>
+                <div class="card">
+                    <div class="kpi-title">Churn Rate</div>
+                    <div class="kpi-val" style="color:var(--status-err);">0%</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header">Base de Datos de Clientes</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Cliente / Empresa</th><th>Producto</th><th>Coste/Mes</th><th>Uso</th><th>Pagos</th><th>Acción</th></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Mireia OFA</strong><br><span style="font-size:0.7rem; color:var(--slate);">ID: 001</span></td>
+                                <td><span class="badge" style="background:#f1f5f9; color:var(--charcoal);">OFA OS + Elia</span></td>
+                                <td>€ 0</td>
+                                <td>95%</td>
+                                <td><span class="badge" style="background:#dcfce7; color:#166534;">AUTO</span></td>
+                                <td><a href="mireia_dashboard.html" class="badge" style="background:var(--ofa-teal); color:white; text-decoration:none;">Ver Dashboard ↗</a></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Jorge Pérez</strong><br><span style="font-size:0.7rem; color:var(--slate);">ID: 002</span></td>
+                                <td><span class="badge" style="background:#f1f5f9; color:var(--charcoal);">OFA Core</span></td>
+                                <td>€ 49/mo</td>
+                                <td>60%</td>
+                                <td><span class="badge" style="background:#fef9c3; color:#854d0e;">PENDING</span></td>
+                                <td><a href="jorge_dashboard.html" class="badge" style="background:var(--ofa-teal); color:white; text-decoration:none;">Ver Dashboard ↗</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- LEGAL -->
+        <section id="module-legal" class="module">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">Protección de Datos (RGPD)</div>
+                    <div style="font-size:0.85rem; line-height:1.6;">
+                        <p>Documentación legal sobre el tratamiento de datos de leads de Elia.</p>
+                        <ul style="margin-top:10px; padding-left:20px;">
+                            <li>Políticas de Privacidad</li>
+                            <li>Aviso Legal</li>
+                            <li>Contrato de Tratamiento de Datos (DPA)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Contratos y Modelos</div>
+                    <div class="table-wrap">
+                        <table>
+                            <tbody>
+                                <tr><td>Contrato Master Elia Web</td><td style="text-align:right;"><a href="#" style="color:var(--ofa-teal);">PDF ↗</a></td></tr>
+                                <tr><td>SLA - Servicio de Voz</td><td style="text-align:right;"><a href="#" style="color:var(--ofa-teal);">PDF ↗</a></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section id="module-factory" class="module">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">🤖 Elia Web</div>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Widget IA para captura de leads B2B en webs OFA.</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:#dcfce7; color:#166534;">PRODUCTION</span>
+                        <a href="https://elia-web.vercel.app" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">🎙️ Noa Voice</div>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Agente de voz con memoria a largo plazo (Retell/ElevenLabs).</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:rgba(129,140,248,0.1); color:var(--status-prog);">ALPHA</span>
+                        <a href="https://noa.optimumforall.es" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">🏗️ Web Constructor</div>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Crea landings y webs optimizadas para IA en minutos.</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:rgba(251,191,36,0.1); color:#92400e;">READY</span>
+                        <a href="https://lovable.dev" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">📲 WhatsApp Agent Builder</div>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de flujos ManyChat + n8n para WhatsApp.</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:rgba(52,211,153,0.1); color:#059669;">ACTIVE</span>
+                        <a href="https://app.manychat.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Configurar ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">🗣️ Voice Agent Builder</div>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Dashboard central para agentes de voz (RetellAI / Base44).</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:rgba(129,140,248,0.1); color:#6366f1;">NEW</span>
+                        <a href="https://auth.retellai.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso Retell ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">🏗️ Web Constructor</div>
+                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Crea landings y webs optimizadas para IA en minutos.</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:rgba(251,191,36,0.1); color:#92400e;">READY</span>
+                        <a href="https://lovable.dev" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">📲 WhatsApp Agent Builder</div>
+                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Constructor de flujos ManyChat + n8n para WhatsApp.</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:rgba(52,211,153,0.1); color:#059669;">ACTIVE</span>
+                        <a href="https://app.manychat.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Configurar ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">🗣️ Voice Agent Builder</div>
+                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Dashboard central para agentes de voz (RetellAI / Base44).</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:rgba(129,140,248,0.1); color:#6366f1;">NEW</span>
+                        <a href="https://auth.retellai.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso Retell ↗</a>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">🖥️ OFA Operating System</div>
+                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Esta consola de control centralizada (Next.js/Supabase).</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:#dcfce7; color:#166534;">v1.2 ACTIVE</span>
+                        <a href="index.html" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Current Hub ↗</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MARKETING -->
+        <section id="module-marketing" class="module">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">📈 Presencia Web</div>
+                    <table style="width:100%;">
+                        <tbody>
+                            <tr><td>optimumforall.es</td><td style="text-align:right;"><span class="badge" style="background:#dcfce7; color:#166534;">LIVE</span></td><td style="text-align:right;"><a href="https://optimumforall.es" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                            <tr><td>noa-app-landing.vercel.app</td><td style="text-align:right;"><span class="badge" style="background:#dcfce7; color:#166534;">WAITLIST</span></td><td style="text-align:right;"><a href="https://noa-app-landing.vercel.app" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">📱 Redes Sociales (OFA)</div>
+                    <table style="width:100%;">
+                        <tbody>
+                            <tr><td>Instagram OFA</td><td style="text-align:right;"><span class="badge" style="background:#dcfce7; color:#166534;">ACTIVE</span></td><td style="text-align:right;"><a href="https://instagram.com/optimumforall" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                            <tr><td>Facebook OFA</td><td style="text-align:right;"><span class="badge" style="background:#f1f5f9; color:#475569;">SYNC</span></td><td style="text-align:right;"><a href="https://facebook.com/optimumforall" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">🚀 Redes Sociales (Noa Voice)</div>
+                    <table style="width:100%;">
+                        <tbody>
+                            <tr><td>Instagram Noa</td><td style="text-align:right;"><span class="badge" style="background:#dcfce7; color:#166534;">NEW</span></td><td style="text-align:right;"><a href="https://www.instagram.com/noa_voice_ai" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                            <tr><td>Facebook Noa</td><td style="text-align:right;"><span class="badge" style="background:#f1f5f9; color:#475569;">SETUP</span></td><td style="text-align:right;"><a href="https://www.facebook.com/noa.voice" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- FINANCE -->
+        <section id="module-finance" class="module">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="kpi-title">Cash / Caja (€)</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="number" id="fin-caja" value="0" style="font-size:1.5rem; font-weight:700; border:none; background:transparent;">
+                        <span style="font-size:1.5rem; font-weight:700;">€</span>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="kpi-title">Burn Rate (€/mes)</div>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <input type="number" id="fin-burn" value="129" style="font-size:1.5rem; font-weight:700; border:none; background:transparent; color:var(--status-err); width: 100px;">
+                        <span style="font-size:1.5rem; font-weight:700; color:var(--status-err);">€</span>
+                    </div>
+                    <div style="margin-top:10px; font-size:0.8rem;">Runway: <strong id="fin-runway" style="color:var(--ofa-teal);">∞</strong></div>
+                </div>
+            </div>
+
+            <div class="grid-2-1" style="display:grid; grid-template-columns: 2fr 1fr; gap:1.5rem;">
+                <div class="card">
+                    <div class="card-header">SaaS Cost Breakdown (Confirmed)</div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Herramienta</th><th>Uso</th><th style="text-align:right;">€/mes</th></tr></thead>
+                            <tbody>
+                                <tr><td>Vercel / Supabase / Notion</td><td>Core Cloud</td><td style="text-align:right;">0 €</td></tr>
+                                <tr><td>Hostinger VPS</td><td>n8n + Backend</td><td style="text-align:right;">~7 €</td></tr>
+                                <tr><td>Claude / OpenAI</td><td>Core LLMs</td><td style="text-align:right;">~25 €</td></tr>
+                                <tr><td>ManyChat</td><td>Marketing automation</td><td style="text-align:right;">12 €</td></tr>
+                                <tr><td>Skool Academy</td><td>Formación IA</td><td style="text-align:right;">64 €</td></tr>
+                                <tr><td>AI Blueprint Plus</td><td>Formación IA</td><td style="text-align:right;">21 €</td></tr>
+                                <tr style="border-top:2px solid var(--border);"><td><strong>Total Actual</strong></td><td></td><td style="text-align:right;"><strong style="color:var(--status-warn);">~129 €</strong></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Cuentas (Marzo)</div>
+                    <div class="table-wrap">
+                        <table style="font-size:0.75rem;">
+                            <tbody>
+                                <tr><td><strong>Marzo</strong></td><td style="text-align:right;">-129€</td></tr>
+                                <tr><td><strong>Abril</strong></td><td style="text-align:right;">-129€</td></tr>
+                                <tr><td><strong>Mayo (Est)</strong></td><td style="text-align:right;">-129€</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- OPS & VAULT -->
+        <section id="module-ops" class="module">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">Servicios de Infraestructura</div>
+                    <table style="width:100%;">
+                        <tbody>
+                            <tr><td><strong>Supabase</strong></td><td style="text-align:right;"><span id="status-supabase" class="badge" style="background:#f1f5f9; color:#475569;">OFFLINE</span></td><td style="text-align:right;"><a href="https://supabase.com/dashboard" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                            <tr><td><strong>Vercel</strong></td><td style="text-align:right;"><span class="badge" style="background:#dcfce7; color:#166534;">ONLINE</span></td><td style="text-align:right;"><a href="https://vercel.com/dashboard" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                            <tr><td><strong>n8n Webhook</strong></td><td style="text-align:right;"><span id="status-n8n" class="badge" style="background:#fee2e2; color:#991b1b;">PENDING</span></td><td style="text-align:right;"><a href="#" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                            <tr><td><strong>Slack Alerts</strong></td><td style="text-align:right;"><span class="badge" style="background:#dcfce7; color:#166534;">NEW</span></td><td style="text-align:right;"><a href="https://slack.com" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <div class="card-header">Consolas Personales</div>
+                    <table style="width:100%;">
+                        <tbody>
+                            <tr><td><strong>Mireia Console</strong></td><td style="text-align:right;"><a href="mireia_dashboard.html" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.8rem;">Vault Access ↗</a></td></tr>
+                            <tr><td><strong>Jorge Console</strong></td><td style="text-align:right;"><a href="jorge_dashboard.html" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.8rem;">Vault Access ↗</a></td></tr>
+                            <tr><td><strong>Vojislav Tech</strong></td><td style="text-align:right;"><a href="vojislav_dashboard.html" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.8rem;">Vault Access ↗</a></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">System Events</div>
+                <div id="ops-raw-tbody" style="font-family:var(--font-mono); font-size:0.75rem; background:var(--bg-master); color:var(--charcoal); padding:15px; height:180px; overflow-y:auto; border-radius:10px; border:1px solid var(--ofa-border); line-height:1.6;">
+                    <span style="color:var(--ofa-slate);">[INIT] System ready.</span>
+                </div>
+            </div>
+
+            <style>
+                .stack-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+                .stack-col h4 { font-size: 0.72rem; text-transform: uppercase; color: var(--slate); margin-bottom: 12px; border-bottom: 1px solid var(--border); padding-bottom: 5px; }
+                .stack-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid rgba(0,0,0,0.03); font-size: 0.85rem; }
+                .stack-link { color: var(--ofa-teal); text-decoration: none; font-size: 0.75rem; font-weight: 600; }
+                .stack-item:hover { background: rgba(0,0,0,0.01); }
+            </style>
+
+            <div class="card">
+                <div class="card-header">🛠️ Stack Directorio OFA</div>
+                <div class="stack-grid">
+                    <!-- COL 1: CORE IA -->
+                    <div class="stack-col">
+                        <h4>🧠 IA / LLMs / Knowledge</h4>
+                        <div class="stack-item"><span>ChatGPT</span><a href="https://chatgpt.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Claude AI</span><a href="https://claude.ai" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Gemini Hub</span><a href="https://gemini.google.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>DeepSeek</span><a href="https://www.deepseek.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Grok AI</span><a href="https://grok.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>NotebookLM</span><a href="https://notebooklm.google.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Kortix</span><a href="https://kortix.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                    </div>
+                    <!-- COL 2: MEDIA & CREATIVE -->
+                    <div class="stack-col">
+                        <h4>🎨 Media & Video</h4>
+                        <div class="stack-item"><span>HeyGen</span><a href="https://app.heygen.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>ElevenLabs</span><a href="https://elevenlabs.io" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Leonardo.ai</span><a href="https://leonardo.ai" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Ideogram</span><a href="https://ideogram.ai" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>CapCut</span><a href="https://capcut.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Opus Clip</span><a href="https://clip.opus.pro" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Figma</span><a href="https://figma.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Gamma App</span><a href="https://gamma.app" target="_blank" class="stack-link">Abrir ↗</a></div>
+                    </div>
+                    <!-- COL 3: DEV & OPS -->
+                    <div class="stack-col">
+                        <h4>⚙️ Dev, Data & Ops</h4>
+                        <div class="stack-item"><span>Cursor</span><a href="https://cursor.sh" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>ManyChat</span><a href="https://app.manychat.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>n8n.io</span><a href="https://n8n.io" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Airtable</span><a href="https://airtable.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Softr Studio</span><a href="https://studio.softr.io" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Lovable</span><a href="https://lovable.dev" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Vercel</span><a href="https://vercel.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Supabase</span><a href="https://supabase.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                        <div class="stack-item"><span>Slack Desktop</span><a href="https://slack.com" target="_blank" class="stack-link">Abrir ↗</a></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SETTINGS -->
+        <section id="module-settings" class="module">
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">Sistemas & Interfaz</div>
+                    <div style="display:flex; flex-direction:column; gap:20px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-weight:600;">Scandinavian Dark Mode</div>
+                                <div style="font-size:0.75rem; color:var(--slate);">Interfaz de alta fidelidad para sesiones nocturnas.</div>
+                            </div>
+                            <button onclick="toggleTheme()" class="badge" style="background:var(--ofa-teal); color:white; border:none; cursor:pointer; padding:8px 15px;">Switch Theme</button>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-weight:600;">Notificaciones de Lead</div>
+                                <div style="font-size:0.75rem; color:var(--slate);">Aviso visual/sonoro al entrar leads de Elia.</div>
+                            </div>
+                            <input type="checkbox" checked style="width:20px;">
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Account Details</div>
+                    <div style="font-size:0.85rem; color:var(--slate);">
+                        <p><strong>Org:</strong> Optimum For All</p>
+                        <p><strong>License:</strong> Founders Edition</p>
+                        <p style="margin-top:15px; font-size:0.75rem;">OFA Operating System es la boveda de control central de la factoría.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        let supabase = null;
+        async function init() {
+            try {
+                // Handling hash for direct module access (e.g. #ops)
+                const hash = window.location.hash.replace('#', '');
+                if (hash) {
+                    console.log("Found Hash Redirect:", hash);
+                    setTimeout(() => {
+                        const btn = document.querySelector(`.nav-btn[data-mod="${hash}"]`);
+                        if (btn) {
+                            switchModule(hash, btn);
+                        } else {
+                            // Si no hay botón, forzar el módulo
+                            switchModule(hash, null);
+                        }
+                    }, 250);
+                }
+
+                // Theme Set
+                const savedTheme = localStorage.getItem('ofa_theme') || 'light';
+                document.documentElement.setAttribute('data-theme', savedTheme);
+                const themeIcon = document.getElementById('theme-toggle-icon');
+                if(themeIcon) themeIcon.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+                // Initial Date Set
+                const now = new Date();
+                const dateStr = now.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+                const finalDate = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+                document.getElementById('top-date-long').textContent = finalDate;
+
+                updateUI();
+                addLogEntry('System Initializing...', 'INIT');
+
+                const url = 'https://pzjdruihfqtflugypcgl.supabase.co';
+                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
+                supabase = window.supabase.createClient(url, key);
+                
+                document.getElementById('status-supabase').textContent = 'ONLINE';
+                document.getElementById('status-supabase').style.background = '#dcfce7';
+                document.getElementById('status-supabase').style.color = '#166534';
+                
+                addLogEntry('Supabase Connection established', 'DB');
+                fetchData();
+            } catch(e) {
+                console.error("Init Error:", e);
+                addLogEntry('System init failure', 'ERR');
+            }
+
+            setInterval(fetchData, 60000);
+            setTimeout(() => addLogEntry('Elia Widget: Monitoring active', 'WEB'), 1000);
+            setTimeout(() => addLogEntry('Security Layer: Verified', 'SEC'), 2000);
+        }
+
+        async function fetchData() {
+            if(!supabase) return;
+            try {
+                const { data: leads } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+                if(leads) {
+                    document.getElementById('g-leads-total').textContent = leads.length;
+                    const eliaCount = leads.filter(l => l.source === 'Elia Web Widget').length;
+                    document.getElementById('g-leads-elia').textContent = eliaCount;
+                    
+                    const now = new Date();
+                    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+                    const newLeads = leads.filter(l => new Date(l.created_at) > sevenDaysAgo).length;
+                    document.getElementById('g-leads-7d').textContent = newLeads;
+
+                    // Home Table
+                    const homeTbody = document.getElementById('home-leads-tbody');
+                    homeTbody.innerHTML = leads.slice(0, 5).map(l => `
+                        <tr>
+                            <td><strong>${l.name || 'Anónimo'}</strong></td>
+                            <td>${l.business_id || 'OFA'}</td>
+                            <td style="font-size:0.7rem; color:var(--slate);">${new Date(l.created_at).toLocaleDateString()}</td>
+                        </tr>
+                    `).join('');
+
+                    // CRM Table (Sales)
+                    const crmTbody = document.getElementById('crm-leads-full');
+                    if(crmTbody) {
+                        const crmSrc = document.getElementById('crm-source-filter').value;
+                        const filteredCRM = crmSrc === 'all' ? leads : leads.filter(l => l.source === crmSrc);
+                        
+                        crmTbody.innerHTML = filteredCRM.slice(0, 20).map(l => `
+                            <tr>
+                                <td><strong>${l.name || 'Anónimo'}</strong><div style="font-size:0.7rem; color:var(--slate);">${l.email || l.contact || ''}</div></td>
+                                <td>${l.source || 'Directo'}</td>
+                                <td>
+                                    <select onchange="updateLeadStatus('${l.id}', this.value)" class="badge" style="background:#f1f5f9; color:#475569; border:none; cursor:pointer; font-size:0.65rem;">
+                                        <option value="new" ${l.status === 'new' ? 'selected' : ''}>NEW</option>
+                                        <option value="contacted" ${l.status === 'contacted' ? 'selected' : ''}>CONTACT</option>
+                                        <option value="demo_scheduled" ${l.status === 'demo_scheduled' ? 'selected' : ''}>DEMO</option>
+                                        <option value="closed_won" ${l.status === 'closed_won' ? 'selected' : ''}>WON ✓</option>
+                                        <option value="closed_lost" ${l.status === 'closed_lost' ? 'selected' : ''}>LOST</option>
+                                    </select>
+                                </td>
+                                <td><button onclick="window.open('https://pzjdruihfqtflugypcgl.supabase.co/dashboard/project/pzjdruihfqtflugypcgl/editor', '_blank')" class="badge" style="background:rgba(56,189,248,0.1); color:var(--ofa-teal); border:none; cursor:pointer;">Detalles</button></td>
+                            </tr>
+                        `).join('');
+                    }
+
+                    addLogEntry(`Sync: ${leads.length} records processed`, 'DB');
+                }
+            } catch(e) {
+                console.error("Fetch Error:", e);
+            }
+        }
+
+        document.getElementById('fin-caja').oninput = calcFinance;
+        document.getElementById('fin-burn').oninput = calcFinance;
+        function calcFinance() {
+            const c = parseFloat(document.getElementById('fin-caja').value) || 0;
+            const b = parseFloat(document.getElementById('fin-burn').value) || 1;
+            const rw = (c/b).toFixed(1);
+            document.getElementById('fin-runway').textContent = rw === 'Infinity' ? '∞' : rw + ' M';
+        }
+
+        async function updateLeadStatus(id, newStatus) {
+            if(!supabase) return;
+            try {
+                const { error } = await supabase.from('leads').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
+                if (error) throw error;
+                addLogEntry(`Lead ${id.slice(0,5)} updated to ${newStatus}`, 'DB');
+                fetchData(); // Refresh UI
+            } catch(e) {
+                console.error("Update Error:", e);
+                alert("Error al actualizar lead");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
