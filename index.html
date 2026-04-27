@@ -426,38 +426,7 @@
                         <a href="https://auth.retellai.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso Retell ↗</a>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="card-header">🏗️ Web Constructor</div>
-                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Crea landings y webs optimizadas para IA en minutos.</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:rgba(251,191,36,0.1); color:#92400e;">READY</span>
-                        <a href="https://lovable.dev" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">📲 WhatsApp Agent Builder</div>
-                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Constructor de flujos ManyChat + n8n para WhatsApp.</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:rgba(52,211,153,0.1); color:#059669;">ACTIVE</span>
-                        <a href="https://app.manychat.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Configurar ↗</a>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">🗣️ Voice Agent Builder</div>
-                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Dashboard central para agentes de voz (RetellAI / Base44).</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:rgba(129,140,248,0.1); color:#6366f1;">NEW</span>
-                        <a href="https://auth.retellai.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso Retell ↗</a>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">🖥️ OFA Operating System</div>
-                    <p style="font-size:0.85rem; color:var(--ofa-slate); margin-bottom:15px;">Esta consola de control centralizada (Next.js/Supabase).</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:#dcfce7; color:#166534;">v1.2 ACTIVE</span>
-                        <a href="index.html" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Current Hub ↗</a>
-                    </div>
-                </div>
+
             </div>
         </section>
 
@@ -732,6 +701,10 @@
                     const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
                     const newLeads = leads.filter(l => new Date(l.created_at) > sevenDaysAgo).length;
                     document.getElementById('g-leads-7d').textContent = newLeads;
+
+                    // Fetch pending sales tasks count for today KPI
+                    const { data: todayTasks } = await supabase.from('tasks').select('id').eq('context', 'sales').eq('status', 'pending');
+                    document.getElementById('g-tasks-today').textContent = todayTasks ? todayTasks.length : 0;
 
                     // Home Table
                     const homeTbody = document.getElementById('home-leads-tbody');
