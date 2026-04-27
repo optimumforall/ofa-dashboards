@@ -206,6 +206,34 @@
         </div>
     </div>
 
+    <!-- MODAL IA -->
+    <div id="ai-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div style="background:var(--white); padding:2rem; border-radius:16px; width:500px; max-width:90%; box-shadow:0 20px 50px rgba(0,0,0,0.2);">
+            <h3 style="margin-bottom:1rem; display:flex; align-items:center; gap:8px;">✨ Sugerencia IA (Claude)</h3>
+            <p id="ai-status" style="font-size:0.85rem; color:var(--slate); margin-bottom:1rem;">Generando mensaje...</p>
+            
+            <div id="ai-results" style="display:none; max-height:60vh; overflow-y:auto; padding-right:10px;">
+                <h4 style="margin: 0 0 10px 0; font-size:0.9rem; color:var(--brand);">Primer Contacto</h4>
+                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">WhatsApp:</label>
+                <textarea id="ai-wa-initial" style="width:100%; height:80px; margin-bottom:1rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
+                
+                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">Email:</label>
+                <textarea id="ai-email-initial" style="width:100%; height:100px; margin-bottom:1.5rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
+
+                <h4 style="margin: 0 0 10px 0; font-size:0.9rem; color:var(--brand);">Seguimiento (Follow-up)</h4>
+                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">WhatsApp:</label>
+                <textarea id="ai-wa-followup" style="width:100%; height:80px; margin-bottom:1rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
+                
+                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">Email:</label>
+                <textarea id="ai-email-followup" style="width:100%; height:100px; margin-bottom:1rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
+            </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="document.getElementById('ai-modal').style.display='none'" style="padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let lang = localStorage.getItem('ofa_lang') || 'es';
         function setLang(l) {
@@ -221,7 +249,7 @@
             btn.classList.add('active');
         }
 
-        function statusSelect(leadId, currentStatus) {
+        function statusSelect(leadEmail, leadName, currentStatus) {
             const map = {
                 'new': 'Nuevo', 'contacted': 'Contactado', 'interested': 'Interesado',
                 'demo_scheduled': 'Demo', 'demo_done': 'Demo Done', 'proposal_sent': 'Propuesta',
@@ -231,20 +259,28 @@
             for (const [val, label] of Object.entries(map)) {
                 options += `<option value="${val}" ${val === currentStatus ? 'selected' : ''}>${label.toUpperCase()}</option>`;
             }
-            return `<select onchange="updateLeadStatus('${leadId}', this.value)" class="badge" style="background:var(--bg); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; font-size:0.65rem; padding:4px 8px; font-weight:700;">${options}</select>`;
+            return `<select onchange="updateLeadStatus('${leadEmail}', '${leadName}', this.value)" class="badge" style="background:var(--bg); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; font-size:0.65rem; padding:4px 8px; font-weight:700;">${options}</select>`;
         }
 
-        function actionButtons(contact, name) {
-            if (!contact) return '';
-            const cleanContact = contact.trim().replace(/\s+/g, '');
+        function actionButtons(email, name, segment, city, status) {
+            const cleanContact = (email || '').trim().replace(/\s+/g, '');
             const isPhone = /^\+?[\d\s-]{9,}$/.test(cleanContact);
             let buttons = `<div class="action-group">`;
             if (isPhone) {
                 buttons += `<a href="https://wa.me/${cleanContact.replace('+', '')}" target="_blank" class="btn-action" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.6 8.38 8.38 0 0 1 3.8.9L21 3l-1.5 4.5Z"></path></svg></a>`;
-            } else {
+            } else if (cleanContact) {
                 buttons += `<a href="mailto:${cleanContact}?subject=Contacto de Elia Asistente&body=Hola ${name || ''}," class="btn-action" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg></a>`;
             }
-            buttons += `<button onclick="navigator.clipboard.writeText('${cleanContact}')" class="btn-action" title="Copiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button></div>`;
+            buttons += `<button onclick="navigator.clipboard.writeText('${cleanContact}')" class="btn-action" title="Copiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>`;
+            
+            // Botón IA
+            const safeName = (name || '').replace(/'/g, "\\'");
+            const safeSegment = (segment || '').replace(/'/g, "\\'");
+            const safeCity = (city || '').replace(/'/g, "\\'");
+            const safeStatus = (status || 'new').replace(/'/g, "\\'");
+            buttons += `<button onclick="suggestMessageWithIA('${safeName}', '${safeSegment}', '${safeCity}', '${safeStatus}')" class="btn-action" title="Sugerir mensaje con IA" style="color: #8b5cf6; border-color: #ddd6fe;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"></path><path d="m14 7 3 3"></path><path d="M5 6v4"></path><path d="M19 14v4"></path><path d="M10 2v2"></path><path d="M7 8H3"></path><path d="M21 16h-4"></path><path d="M11 3H9"></path></svg></button>`;
+            
+            buttons += `</div>`;
             return buttons;
         }
 
@@ -271,53 +307,50 @@
 
                 // Tab: Hoy
                 const tbodyToday = document.getElementById('tbody-today');
-                const todayLeads = filtered.filter(l => pendingTasks.some(t => t.lead_id === l.id));
+                const salesTasks = pendingTasks.filter(t => t.context === 'sales' && t.lead_email);
+                const todayLeads = filtered.filter(l => salesTasks.some(t => t.lead_email === l.email));
                 tbodyToday.innerHTML = todayLeads.length ? todayLeads.map(l => {
-                    const task = pendingTasks.filter(t => t.lead_id === l.id).sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0];
-                    return `<tr><td><strong>${l.name||'—'}</strong><br><span style="color:var(--slate);font-size:0.7rem;">${l.email||''}</span></td><td>${statusSelect(l.id, l.status)}</td><td style="font-size:0.75rem;"><strong>${task.title}</strong></td><td><div style="display:flex; gap:5px;">${actionButtons(l.email, l.name)}<button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></div></td></tr>`;
+                    const task = salesTasks.filter(t => t.lead_email === l.email).sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0];
+                    return `<tr><td><strong>${l.name||'—'}</strong><br><span style="color:var(--slate);font-size:0.7rem;">${l.email||''}</span></td><td>${statusSelect(l.email, l.name||'', l.status)}</td><td style="font-size:0.75rem;"><strong>${task.title}</strong></td><td><div style="display:flex; gap:5px;">${actionButtons(l.email, l.name, l.metadata?.segment, l.metadata?.city, l.status)}<button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></div></td></tr>`;
                 }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Sin tareas hoy</td></tr>';
 
                 // Tab: Pipeline
                 const tbodyPipe = document.getElementById('tbody-pipeline');
                 tbodyPipe.innerHTML = filtered.map(l => {
                     const tCount = pendingTasks.filter(t => t.lead_id === l.id).length;
-                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.id, l.status)}</td><td>${fmtDate(l.updated_at)}</td><td>${tCount > 0 ? `<span class="badge" style="background:var(--warn); color:white;">${tCount}</span>` : '—'}</td></tr>`;
+                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.email, l.name||'', l.status)}</td><td>${fmtDate(l.updated_at)}</td><td>${tCount > 0 ? `<span class="badge" style="background:var(--warn); color:white;">${tCount}</span>` : '—'}</td></tr>`;
                 }).join('');
 
                 // Tab: Follow-up
                 const tbodyFollow = document.getElementById('tbody-followup');
-                const followLeads = filtered.filter(l => pendingTasks.some(t => t.lead_id === l.id && t.title.toLowerCase().includes('segui')));
+                const followLeads = filtered.filter(l => pendingTasks.some(t => t.lead_email === l.email && t.title.toLowerCase().includes('segui')));
                 tbodyFollow.innerHTML = followLeads.length ? followLeads.map(l => {
-                    const task = pendingTasks.find(t => t.lead_id === l.id && t.title.toLowerCase().includes('segui'));
-                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.id, l.status)}</td><td style="color:var(--err); font-weight:600;">${task.title}</td><td><button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></td></tr>`;
+                    const task = pendingTasks.find(t => t.lead_email === l.email && t.title.toLowerCase().includes('segui'));
+                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.email, l.name||'', l.status)}</td><td style="color:var(--err); font-weight:600;">${task.title}</td><td><button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></td></tr>`;
                 }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Sin seguimientos</td></tr>';
 
                 renderFunnelChart(filtered);
             } catch(e) { console.error(e); }
         }
 
-        async function updateLeadStatus(id, newStatus) {
-            if(!supa) return;
+        async function updateLeadStatus(email, name, newStatus) {
+            if(!email) { console.error("Lead email missing for upsert"); return; }
             try {
-                await supa.from('leads').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
-                await triggerAutomatedTask(id, newStatus);
+                // Using backend endpoint instead of direct Supabase update
+                // The backend will handle the automatic creation/completion of sales tasks
+                await fetch('http://localhost:3001/api/crm/upsert-lead', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name, status: newStatus })
+                });
+                
                 fetchLeads(); fetchTasks();
             } catch(e) { console.error(e); }
         }
 
+        // Deprecated: logic moved to backend handleSalesTasks
         async function triggerAutomatedTask(leadId, status) {
-            const TASK_MAP = {
-                'new': '🟢 Primer contacto / Cualificación', 'contacted': '🔵 Seguimiento de interés',
-                'interested': '📅 Agendar reunión / Demo', 'demo_scheduled': '🛠️ Preparar Demo personalizada',
-                'demo_done': '📝 Enviar propuesta comercial', 'proposal_sent': '⏳ Seguimiento de cierre',
-                'closed_won': '🎉 Onboarding inicial', 'closed_lost': '📁 Archivar'
-            };
-            const title = TASK_MAP[status];
-            if (!title) return;
-            try {
-                await supa.from('tasks').update({ status: 'completed' }).eq('lead_id', leadId).eq('status', 'pending');
-                await supa.from('tasks').insert([{ lead_id: leadId, title, owner: 'Mireia', category: 'SALES', status: 'pending' }]);
-            } catch(e) { console.warn(e); }
+            console.log("triggerAutomatedTask is now handled by the backend /api/crm/upsert-lead");
         }
 
         async function fetchTasks() {
@@ -331,9 +364,13 @@
         }
 
         async function completeTask(id, leadName, taskTitle, leadStatus) {
-            if(!supa) return;
             try {
-                await supa.from('tasks').update({ status: 'completed' }).eq('id', id);
+                // Using backend endpoint instead of direct Supabase update
+                await fetch('http://localhost:3001/api/tasks/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ task_id: id, status: 'completed' })
+                });
                 if (taskTitle) {
                     const keywords = ['Primer contacto', 'propuesta', 'Segui', 'Onboard'];
                     if (keywords.some(k => taskTitle.toLowerCase().includes(k.toLowerCase()))) {
@@ -344,6 +381,44 @@
                 }
                 fetchLeads(); fetchTasks();
             } catch(e) { console.error(e); }
+        }
+
+        async function suggestMessageWithIA(name, segment, city, status) {
+            const modal = document.getElementById('ai-modal');
+            const statusText = document.getElementById('ai-status');
+            const resultsDiv = document.getElementById('ai-results');
+            const waIni = document.getElementById('ai-wa-initial');
+            const emIni = document.getElementById('ai-email-initial');
+            const waFol = document.getElementById('ai-wa-followup');
+            const emFol = document.getElementById('ai-email-followup');
+            
+            modal.style.display = 'flex';
+            statusText.textContent = 'Analizando contexto y generando copy con Claude...';
+            resultsDiv.style.display = 'none';
+            waIni.value = ''; emIni.value = '';
+            waFol.value = ''; emFol.value = '';
+
+            try {
+                const response = await fetch('http://localhost:3001/api/crm/generate-outreach', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, segment, city, status })
+                });
+                const data = await response.json();
+                
+                if (data.success) {
+                    waIni.value = data.whatsapp_initial || '';
+                    emIni.value = data.email_initial || '';
+                    waFol.value = data.whatsapp_followup || '';
+                    emFol.value = data.email_followup || '';
+                    statusText.textContent = 'Sugerencia completada. Puedes revisar y editar los mensajes antes de copiarlos.';
+                    resultsDiv.style.display = 'block';
+                } else {
+                    statusText.textContent = 'Error: ' + (data.error || 'No se pudo generar.');
+                }
+            } catch (e) {
+                statusText.textContent = 'Error de conexión: ' + e.message;
+            }
         }
 
         function renderFunnelChart(leads) {

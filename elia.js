@@ -237,7 +237,7 @@
     }
 
     async function sendToN8N(data) {
-        const N8N_URL = 'https://n8n.optimumforall.com/webhook/elia-leads'; // REEMPLAZAR con tu URL de n8n
+        const N8N_URL = 'https://n8n.optimumforall.com/webhook/ofa-inbound-lead';
         try {
             await fetch(N8N_URL, {
                 method: 'POST',
