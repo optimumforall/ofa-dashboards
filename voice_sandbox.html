@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA | Voice Agent Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --v-bg: #1e293b; --v-header: #0f172a; --v-text: #f1f5f9;
+            --accent: #38bdf8; --border: #334155;
+        }
+        body { font-family: 'Outfit', sans-serif; background: var(--v-bg); color: var(--v-text); margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
+        .header { background: var(--v-header); padding: 20px 30px; display: flex; align-items: center; gap: 20px; border-bottom: 1px solid var(--border); }
+        .pulse-icon { width: 12px; height: 12px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 10px var(--accent); animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.5; } 100% { transform: scale(1); opacity: 1; } }
+        
+        .transcript-area { flex-grow: 1; padding: 30px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .line { max-width: 80%; font-size: 1.1rem; line-height: 1.5; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .line.agent { color: var(--accent); font-weight: 600; }
+        .line.user { color: #94a3b8; }
+        
+        .controls { background: var(--v-header); padding: 30px; border-top: 1px solid var(--border); display: flex; gap: 15px; }
+        input { flex-grow: 1; background: #0f172a; border: 1px solid var(--border); color: white; padding: 15px 25px; border-radius: 50px; font-size: 1rem; outline: none; }
+        button { background: var(--accent); color: var(--v-header); border: none; padding: 15px 30px; border-radius: 50px; font-weight: 700; cursor: pointer; transition: 0.3s; }
+        
+        .summary-panel { width: 350px; background: #0f172a; border-left: 1px solid var(--border); padding: 25px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div style="display:flex; height:100vh;">
+        <div style="flex-grow:1; display:flex; flex-direction:column;">
+            <div class="header">
+                <div class="pulse-icon"></div>
+                <div style="flex-grow:1;">
+                    <h1 style="font-size:18px; margin:0;">Voice Agent Simulator (P3 MVP)</h1>
+                    <div style="font-size:12px; color:#94a3b8;">Simulación de llamada mediante texto</div>
+                </div>
+                <select id="agent-selector" style="background:#0f172a; color:white; border:1px solid var(--border); padding:5px; border-radius:5px;" onchange="resetCall()">
+                    <option value="">Cargando agentes...</option>
+                </select>
+                <a href="agent_factory.html" style="color:var(--accent); text-decoration:none; font-size:14px; font-weight:600;">Cerrar</a>
+            </div>
+
+            <div class="transcript-area" id="transcript">
+                <div class="line agent">[CONEXIÓN INICIADA] El sistema de voz está listo. Di algo para empezar.</div>
+            </div>
+
+            <div class="controls">
+                <input type="text" id="voice-input" placeholder="Escribe lo que dirías por teléfono..." onkeypress="if(event.key==='Enter') sendVoice()">
+                <button onclick="sendVoice()">HABLAR</button>
+            </div>
+        </div>
+
+        <div class="summary-panel" id="summary-panel">
+            <h3 style="margin-bottom:20px; color:var(--accent); font-size:14px; text-transform:uppercase;">📞 Call Summary (JSON)</h3>
+            <pre id="summary-json" style="font-size:12px; color:#94a3b8; white-space:pre-wrap;"></pre>
+        </div>
+    </div>
+
+<script>
+    const BACKEND_URL = 'http://localhost:3001/api/agents';
+    const transcript = document.getElementById('transcript');
+    let history = [];
+
+    async function loadAgents() {
+        try {
+            const res = await fetch(`${BACKEND_URL}/voice`);
+            const agents = await res.json();
+            const selector = document.getElementById('agent-selector');
+            selector.innerHTML = '<option value="">-- Selecciona Agente --</option>';
+            agents.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.id;
+                opt.textContent = a.business_name;
+                selector.appendChild(opt);
+            });
+        } catch (e) { console.error(e); }
+    }
+    loadAgents();
+
+    function resetCall() {
+        transcript.innerHTML = '<div class="line agent">[CONEXIÓN REINICIADA] El sistema de voz está listo.</div>';
+        history = [];
+        document.getElementById('summary-panel').style.display = 'none';
+    }
+
+    async function sendVoice() {
+        const input = document.getElementById('voice-input');
+        const text = input.value.trim();
+        const agentId = document.getElementById('agent-selector').value;
+        if(!text) return;
+
+        addEntry(text, 'user');
+        input.value = '';
+        
+        try {
+            const res = await fetch(`${BACKEND_URL}/voice/simulate`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message: text, history, agent_id: agentId })
+            });
+            const data = await res.json();
+            
+            if(data.reply) {
+                addEntry(data.reply, 'agent');
+                history.push({ role: 'user', content: text });
+                history.push({ role: 'assistant', content: data.reply });
+            }
+
+            if(data.summary) {
+                document.getElementById('summary-panel').style.display = 'block';
+                document.getElementById('summary-json').textContent = JSON.stringify(data.summary, null, 2);
+            }
+        } catch (e) {
+            addEntry('Error de conexión con el servidor.', 'agent');
+        }
+    }
+
+    function addEntry(text, role) {
+        const div = document.createElement('div');
+        div.className = `line ${role}`;
+        div.textContent = (role === 'agent' ? 'NOA: ' : 'TÚ: ') + text;
+        transcript.appendChild(div);
+        transcript.scrollTop = transcript.scrollHeight;
+    }
+</script>
+
+</body>
+</html>

@@ -4,456 +4,1020 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OFA | Sales Console – Mireia</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <script>
+        // Global Storage Mock for non-secure contexts - Must run before any library
+        (function() {
+            try {
+                localStorage.setItem('ofa_test', '1');
+                localStorage.removeItem('ofa_test');
+            } catch (e) {
+                console.warn('OFA Console: Storage is blocked. Mocking to avoid library crashes.');
+                const mockStorage = {
+                    _data: {},
+                    setItem: function(id, val) { this._data[id] = String(val); },
+                    getItem: function(id) { return this._data.hasOwnProperty(id) ? this._data[id] : null; },
+                    removeItem: function(id) { delete this._data[id]; },
+                    clear: function() { this._data = {}; },
+                    length: 0,
+                    key: function(i) { return Object.keys(this._data)[i] || null; }
+                };
+                Object.defineProperty(window, 'localStorage', { value: mockStorage, configurable: true });
+                Object.defineProperty(window, 'sessionStorage', { value: mockStorage, configurable: true });
+            }
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
-            --bg: #f8fafc; --white: #ffffff; --charcoal: #334155; --slate: #94a3b8;
-            --teal: #38bdf8; --border: #f1f5f9; --shadow: 0 4px 20px rgba(0,0,0,0.03);
-            --warn: #fb923c; --err: #f87171; --success: #34d399; --radius: 16px;
-            --prog: #818cf8;
+            --bg: #fdfdfd;
+            --white: #ffffff;
+            --charcoal: #1e293b;
+            --slate: #64748b;
+            --teal: #0ea5e9;
+            --border: #f1f5f9;
+            --shadow: 0 10px 30px -10px rgba(0,0,0,0.05);
+            --warn: #f59e0b;
+            --err: #ef4444;
+            --success: #10b981;
+            --radius: 20px;
+            --prog: #6366f1;
+            --accent: #8b5cf6;
         }
         [data-theme='dark'] {
-            --bg: #0f172a; --white: #1e293b; --charcoal: #f1f5f9; --slate: #64748b;
-            --teal: #38bdf8; --border: #334155; --shadow: 0 10px 30px rgba(0,0,0,0.3);
+            --bg: #020617;
+            --white: #0f172a;
+            --charcoal: #f8fafc;
+            --slate: #94a3b8;
+            --teal: #38bdf8;
+            --border: #1e293b;
+            --shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; transition: background 0.3s, color 0.2s; }
-        body { background: var(--bg); font-family: 'Inter', sans-serif; color: var(--charcoal); padding: 2rem; min-height: 100vh; }
+        * { margin: 0; padding: 0; box-sizing: border-box; transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s; }
+        body { 
+            background: var(--bg); 
+            font-family: 'Outfit', sans-serif; 
+            color: var(--charcoal); 
+            padding: 2.5rem; 
+            min-height: 100vh;
+            background-image: radial-gradient(at 0% 0%, rgba(14, 165, 233, 0.05) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.05) 0px, transparent 50%);
+        }
+
+        /* GLASSMORPHISM */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        [data-theme='dark'] .glass {
+            background: rgba(15, 23, 42, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
 
         /* NAVBAR */
-        .navbar { display: flex; justify-content: space-between; align-items: center; background: var(--white); padding: 1rem 2rem; border-radius: var(--radius); margin-bottom: 2rem; border: 1px solid var(--border); box-shadow: var(--shadow); }
-        .logo { font-weight: 600; color: var(--teal); font-size: 1rem; }
-        .logo span { color: var(--slate); font-weight: 400; }
-        .lang-toggle { display: flex; gap: 10px; color: var(--slate); font-size: 0.82rem; font-weight: 600; align-items: center; }
-        .lang-btn { cursor: pointer; transition: 0.2s; opacity: 0.6; }
-        .lang-btn.active { color: var(--teal); opacity: 1; font-weight: 700; }
-        .lang-separator { opacity: 0.2; }
-        .btn-master { background: #0ea5e9; color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.25); transition: 0.2s; }
-        .btn-master:hover { transform: translateY(-1px); box-shadow: 0 6px 15px rgba(14, 165, 233, 0.35); }
-        .theme-toggle { cursor: pointer; font-size: 1.1rem; user-select: none; }
-        .btn-refresh { background: var(--white); color: var(--charcoal); border: 1px solid var(--border); padding: 0.55rem 1rem; border-radius: 8px; font-weight: 600; font-size: 0.82rem; cursor: pointer; }
+        .navbar { 
+            display: flex; justify-content: space-between; align-items: center; 
+            padding: 1.2rem 2.5rem; border-radius: var(--radius); margin-bottom: 2.5rem; 
+            box-shadow: var(--shadow);
+        }
+        .logo { font-weight: 700; color: var(--teal); font-size: 1.2rem; letter-spacing: -0.5px; }
+        .logo span { color: var(--slate); font-weight: 300; }
+        
+        .nav-right { display: flex; align-items: center; gap: 2rem; }
+        .date-chip { font-size: 0.75rem; font-weight: 600; color: var(--slate); background: var(--bg); padding: 6px 12px; border-radius: 100px; border: 1px solid var(--border); }
+        
+        .btn-master { 
+            background: linear-gradient(135deg, var(--teal), var(--prog)); 
+            color: white; border: none; padding: 0.7rem 1.4rem; border-radius: 12px; 
+            font-weight: 600; font-size: 0.85rem; cursor: pointer; text-decoration: none; 
+            display: inline-flex; align-items: center; gap: 8px; 
+            box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.3); 
+            transition: all 0.3s; 
+        }
+        .btn-master:hover { transform: translateY(-2px); box-shadow: 0 15px 20px -5px rgba(14, 165, 233, 0.4); }
 
-        /* LAYOUT */
-        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; max-width: 1400px; margin: 0 auto; }
-        .card { background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); margin-bottom: 1.5rem; }
-        .card-header { font-weight: 600; font-size: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; }
-        .kpi-label { font-size: 0.78rem; color: var(--slate); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; font-weight: 500; }
-        .kpi-val { font-size: 2rem; font-weight: 700; }
+        /* KPI CARDS */
+        .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
+        .kpi-card { 
+            padding: 1.8rem; border-radius: var(--radius); position: relative; overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+        .kpi-card::after {
+            content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--teal);
+        }
+        .kpi-label { font-size: 0.75rem; color: var(--slate); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 8px; }
+        .kpi-val { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; }
+
+        /* MAIN GRID */
+        .main-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; max-width: 1440px; margin: 0 auto; }
+        .card { 
+            background: var(--white); border: 1px solid var(--border); border-radius: var(--radius); 
+            padding: 1.8rem; box-shadow: var(--shadow); margin-bottom: 2rem; 
+        }
+        .card-header { 
+            font-weight: 700; font-size: 1.1rem; border-bottom: 1px solid var(--border); 
+            padding-bottom: 1rem; margin-bottom: 1.5rem; display: flex; 
+            justify-content: space-between; align-items: center; color: var(--charcoal);
+        }
 
         /* TABS */
-        .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1rem; gap: 0; }
-        .tab { padding: 0.6rem 1.2rem; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--slate); border-bottom: 2px solid transparent; transition: 0.2s; }
+        .tabs { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; background: var(--bg); padding: 5px; border-radius: 12px; width: fit-content; border: 1px solid var(--border); }
+        .tab { padding: 0.5rem 1.2rem; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--slate); border-radius: 8px; transition: 0.3s; }
         .tab:hover { color: var(--charcoal); }
-        .tab.active { color: var(--teal); border-bottom-color: var(--teal); }
-        .tab-panel { display: none; }
+        .tab.active { background: var(--white); color: var(--teal); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .tab-panel { display: none; animation: fadeIn 0.4s ease-out; }
         .tab-panel.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         /* TABLE */
-        table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
-        th { padding: 10px 12px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--slate); font-weight: 600; border-bottom: 2px solid var(--border); background: var(--bg); }
-        td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; font-size: 0.88rem; margin-top: -8px; }
+        th { padding: 12px; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--slate); font-weight: 700; text-align: left; }
+        td { padding: 14px 12px; background: var(--white); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); vertical-align: middle; }
+        td:first-child { border-left: 1px solid var(--border); border-top-left-radius: 12px; border-bottom-left-radius: 12px; }
+        td:last-child { border-right: 1px solid var(--border); border-top-right-radius: 12px; border-bottom-right-radius: 12px; }
+        tr:hover td { background: var(--bg); }
 
-        /* BADGE */
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 0.68rem; font-weight: 700; }
-        .kpi-card { background: var(--white); border: 1px solid var(--border); border-radius: 12px; padding: 1.2rem; box-shadow: var(--shadow); }
-
-        /* QUICK ACTIONS */
-        .action-btn { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg); border: 1px solid var(--border); border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: var(--charcoal); text-decoration: none; transition: 0.2s; width: 100%; margin-bottom: 8px; }
-        .action-btn:hover { border-color: var(--teal); color: var(--teal); }
-
-        /* TASK LIST */
-        .task-list { margin-top: 1rem; }
-        .task-item { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); font-size: 0.8rem; }
-        .task-item:last-child { border-bottom: none; }
-        .task-check { width: 16px; height: 16px; margin-top: 2px; cursor: pointer; }
-        .task-title { font-weight: 500; }
-        .task-meta { font-size: 0.7rem; color: var(--slate); margin-top: 2px; }
-        .task-tag { font-size: 0.6rem; padding: 2px 4px; border-radius: 4px; background: var(--bg); font-weight: 700; margin-left: 5px; }
-
-        /* SOURCE FILTER */
-        .source-select { font-size: 0.78rem; border: 1px solid var(--border); border-radius: 6px; padding: 4px 10px; background: var(--bg); color: var(--charcoal); outline: none; cursor: pointer; }
+        /* BADGES */
+        .badge { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid transparent; }
+        .badge-new { background: #e0f2fe; color: #0ea5e9; }
+        .badge-contacted { background: #e0e7ff; color: #6366f1; }
+        .badge-interested { background: #fef3c7; color: #d97706; }
+        .badge-won { background: #d1fae5; color: #059669; }
 
         /* ACTIONS */
-        .btn-action { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--border); background: var(--white); cursor: pointer; color: var(--slate); transition: 0.2s; text-decoration: none; }
-        .btn-action:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-1px); }
-        .btn-action svg { width: 16px; height: 16px; }
-        .action-group { display: flex; gap: 6px; }
+        .action-group { display: flex; gap: 8px; }
+        .btn-action { 
+            display: inline-flex; align-items: center; justify-content: center; 
+            width: 36px; height: 36px; border-radius: 10px; border: 1px solid var(--border); 
+            background: var(--white); cursor: pointer; color: var(--slate); transition: all 0.2s; 
+        }
+        .btn-action:hover { border-color: var(--teal); color: var(--teal); transform: translateY(-2px); box-shadow: 0 4px 10px rgba(14, 165, 233, 0.15); }
+        .btn-action svg { width: 18px; height: 18px; }
+
+        .btn-product {
+            background: linear-gradient(135deg, var(--accent), var(--prog));
+            color: white; border: none; padding: 12px; border-radius: 12px;
+            font-size: 0.72rem; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;
+            margin-top: 5px; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+            transition: 0.3s; text-decoration: none;
+        }
+        .btn-product:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(139, 92, 246, 0.3); }
+
+        /* MODALS */
+        .modal-overlay { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 10000; 
+            align-items: center; justify-content: center; 
+        }
+        .modal { 
+            background: var(--white); padding: 2.5rem; border-radius: 24px; width: 550px; 
+            max-width: 95%; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); 
+            position: relative; animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
-        .badge-phase { background: #fee2e2; color: #ef4444; border: 1px solid #fecaca; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+        .form-group { margin-bottom: 1.2rem; }
+        .form-label { display: block; font-size: 0.8rem; font-weight: 600; color: var(--slate); margin-bottom: 6px; }
+        .form-input { 
+            width: 100%; padding: 10px 15px; border-radius: 12px; border: 1px solid var(--border); 
+            background: var(--bg); color: var(--charcoal); font-family: inherit; font-size: 0.85rem; outline: none;
+            transition: all 0.2s; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+        .form-input:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
+
+        .btn-primary { 
+            background: var(--teal); color: white; border: none; padding: 0.8rem 1.5rem; 
+            border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%;
+            transition: all 0.3s;
+        }
+        .btn-primary:hover { background: #0284c7; transform: translateY(-1px); }
+
+        /* TASKS */
+        .task-item { 
+            display: flex; align-items: center; gap: 12px; padding: 12px; 
+            border-radius: 12px; margin-bottom: 8px; background: var(--bg); border: 1px solid transparent;
+            transition: 0.2s;
+        }
+        .task-item:hover { border-color: var(--border); transform: translateX(4px); }
+        .task-check { 
+            width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--border); 
+            cursor: pointer; appearance: none; position: relative; background: var(--white);
+        }
+        .task-check:checked { background: var(--success); border-color: var(--success); }
+        .task-check:checked::after { content: '✓'; color: white; position: absolute; left: 3px; top: -1px; font-size: 14px; }
+        .task-title { font-size: 0.88rem; font-weight: 500; }
+        .task-meta { font-size: 0.72rem; color: var(--slate); }
+
+        .btn-add {
+            background: var(--bg); color: var(--teal); border: 1.5px dashed var(--teal);
+            padding: 8px 16px; border-radius: 10px; font-size: 0.75rem; font-weight: 700;
+            cursor: pointer; transition: 0.2s; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-add:hover { background: rgba(14, 165, 233, 0.05); transform: translateY(-1px); }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="logo" style="display:flex; align-items:center; gap:12px;">
-            <span style="filter: grayscale(1) opacity(0.7); font-size:1.2rem;">🧊</span>
-            <div style="line-height:1.2;">OFA Factory<br><span style="font-size:0.7rem; color:var(--slate); text-transform:uppercase; letter-spacing:1px; font-weight:500;">Sales Console · Mireia</span></div>
+    <!-- MODAL: LEAD DETAILS -->
+    <div id="details-modal" class="modal-overlay" onclick="closeModalOnDimmer(event, 'details-modal')">
+        <div class="modal" style="width:500px; max-width:95%;">
+            <h3 style="margin-bottom:1.5rem; display:flex; align-items:center; gap:10px;">
+                <span style="background:var(--teal); color:white; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:1rem;">ℹ️</span>
+                Ficha Técnica: <span id="det-name">...</span>
+            </h3>
+            <div id="det-content" style="display:grid; grid-template-columns:1fr; gap:12px; font-size:0.9rem;">
+                <!-- Detalles se cargan aqui -->
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-top:2rem;">
+                <button onclick="closeModal('details-modal')" class="btn-primary" style="width:auto; padding:0 25px;">Cerrar</button>
+            </div>
         </div>
-        <div class="nav-right" style="display:flex; align-items:center; gap:25px;">
-            <div class="date-chip" id="top-date"></div>
-            <div class="theme-toggle" onclick="toggleTheme()" id="theme-icon">🌙</div>
-            <div class="lang-toggle">
-                <span class="lang-btn" id="btn-es" onclick="setLang('es')">🇪🇸 ES</span>
-                <span class="lang-separator">|</span>
-                <span class="lang-btn" id="btn-en" onclick="setLang('en')">🇬🇧 EN</span>
+    </div>
+
+    <!-- MODAL: CONSTRUCTOR AGENTE WA -->
+    <div id="modal-agent-wa" class="modal-overlay" onclick="closeModalOnDimmer(event, 'modal-agent-wa')">
+        <div class="modal" style="width:600px; max-width:95%;">
+            <h3 style="margin-bottom:1.5rem; display:flex; align-items:center; gap:10px;">
+                <span style="background:var(--accent); color:white; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:1rem;">🎙️</span>
+                Constructor de Agente WhatsApp
+            </h3>
+            <form id="form-agent-wa" onsubmit="saveWaAgent(event)" style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Nombre del Negocio</label>
+                    <input type="text" id="wa-biz-name" class="form-input" placeholder="Ej: Peluquería Brisa" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nicho / Sector</label>
+                    <select id="wa-segment" class="form-input" style="height:45px;">
+                        <option value="peluqueria">Peluquería</option>
+                        <option value="manicura">Manicura / Uñas</option>
+                        <option value="barberia">Barbería</option>
+                        <option value="estetica">Estética</option>
+                        <option value="fontanero">Fontanero</option>
+                        <option value="otro">Otro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ciudad</label>
+                    <input type="text" id="wa-city" class="form-input" placeholder="Ej: Cunit">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono WhatsApp (Agente)</label>
+                    <input type="text" id="wa-phone" class="form-input" placeholder="34600112233" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notificar Resúmenes a (Dueño)</label>
+                    <input type="text" id="wa-owner" class="form-input" placeholder="34600112233">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Horario de Apertura</label>
+                    <input type="text" id="wa-hours" class="form-input" placeholder="Lunes a Viernes 9:00 - 20:00">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Notas / Instrucciones IA</label>
+                    <textarea id="wa-notes" class="form-input" style="height:80px; resize:none;" placeholder="Ej: No damos precios cerrados por WhatsApp..."></textarea>
+                </div>
+                <div style="grid-column: span 2; display:flex; justify-content:flex-end; gap:12px; margin-top:10px;">
+                    <button type="button" onclick="closeModal('modal-agent-wa')" class="btn-action" style="padding:0 20px;">Cancelar</button>
+                    <button type="submit" class="btn-primary" style="width:auto; padding:0 30px; background:var(--accent);">Guardar Agente</button>
+                </div>
+            </form>
+            <div id="wa-status" style="margin-top:15px; font-size:0.8rem; text-align:center; display:none;"></div>
+        </div>
+    </div>
+
+    <nav class="navbar glass">
+        <div class="logo">
+            🧊 OFA Factory <span>· Sales Console</span>
+        </div>
+        <div class="nav-right">
+            <div class="date-chip" id="top-date">ABRIL 28</div>
+            <div style="cursor:pointer; font-size:1.2rem;" onclick="toggleTheme()" id="theme-icon">🌙</div>
+            <div class="lang-toggle" style="display:flex; gap:12px; font-size:0.8rem; font-weight:600; color:var(--slate);">
+                <span id="btn-es" style="cursor:pointer;" onclick="setLang('es')">ES</span>
+                <span id="btn-en" style="cursor:pointer; opacity:0.5;" onclick="setLang('en')">EN</span>
             </div>
             <a href="index.html#ops" class="btn-master">← Bóveda</a>
         </div>
     </nav>
 
-    <!-- KPI ROW -->
-    <div style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin-bottom:1.5rem;">
-        <div class="kpi-card" style="border-top:3px solid var(--teal);">
-            <div class="kpi-label">Total Leads</div>
-            <div class="kpi-val" id="m-total">—</div>
+    <!-- HEADER & KPIs -->
+    <div class="kpi-grid" style="display:flex; align-items:center; gap:8px; margin-bottom:25px; flex-wrap:nowrap;">
+        <div class="kpi-card glass" style="flex:0.8; min-width:90px; padding:12px; border-bottom:3px solid var(--teal);">
+            <div class="kpi-label" style="font-size:0.6rem;">TOTAL</div>
+            <div class="kpi-val" id="m-total" style="font-size:1.2rem;">—</div>
         </div>
-        <div class="kpi-card" style="border-top:3px solid var(--prog);">
-            <div class="kpi-label">Nuevos Leads</div>
-            <div class="kpi-val" id="m-new">—</div>
+        <div class="kpi-card glass" style="flex:0.8; min-width:90px; padding:12px; border-bottom:3px solid var(--prog);">
+            <div class="kpi-label" style="font-size:0.6rem;">HOY</div>
+            <div class="kpi-val" id="m-new-today" style="font-size:1.2rem;">—</div>
         </div>
-        <div class="kpi-card" style="border-top:3px solid var(--warn);">
-            <div class="kpi-label">Demos Programadas</div>
-            <div class="kpi-val" id="m-demo">—</div>
+        <div class="kpi-card glass" style="flex:0.8; min-width:90px; padding:12px; border-bottom:3px solid var(--accent);">
+            <div class="kpi-label" style="font-size:0.6rem;">ELIA</div>
+            <div class="kpi-val" id="m-elia-leads" style="font-size:1.2rem;">0</div>
+        </div>
+        <div class="kpi-card glass" style="flex:2.2; min-width:210px; padding:12px; border-bottom:3px solid var(--warn);">
+            <div class="kpi-label" style="font-size:0.6rem;">HOY POR NICHO</div>
+            <div id="stats-niches-today" style="font-size:0.65rem; font-weight:700; margin-top:5px; color:var(--slate); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">...</div>
+        </div>
+        <div class="kpi-card glass" style="flex:2; min-width:180px; padding:12px; border-bottom:3px solid var(--success);">
+            <div class="kpi-label" style="font-size:0.6rem;">HOY POR FUENTE</div>
+            <div id="stats-source-today" style="font-size:0.65rem; font-weight:700; margin-top:5px; color:var(--slate); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">...</div>
+        </div>
+        <div style="flex:1.2; min-width:130px; display:flex; flex-direction:column; gap:4px;">
+            <button id="btn-sync-apify" onclick="syncApify()" class="btn-primary" style="background:var(--success); font-size:0.65rem; height:34px; padding:0 8px; width:100%; letter-spacing:0.5px;">
+                🚀 TRAER LEADS
+            </button>
+            <div id="sync-status" style="font-size:0.55rem; text-align:center; color:var(--slate); opacity:0.8;">Listo</div>
         </div>
     </div>
 
+    <div style="display:flex; gap:12px; margin-bottom:20px; align-items:center;">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--slate); letter-spacing:0.5px;">FILTRAR POR:</span>
+        <select id="source-filter" class="form-input" style="width:180px; font-size:0.75rem;" onchange="fetchLeads()">
+            <option value="all">Todas las fuentes</option>
+            <option value="Elia Web Widget">Elia Web Widget</option>
+            <option value="Manual">Manual</option>
+            <option value="apify_salones">Apify Salones</option>
+        </select>
+        <select id="niche-filter" class="form-input" style="width:180px; font-size:0.75rem;" onchange="fetchLeads()">
+            <option value="all">Todos los Nichos</option>
+        </select>
+    </div>
+
     <div class="main-grid">
-        <!-- LEFT: Pipeline + table -->
-        <div>
-            <div class="card">
-                <div class="card-header">
-                    Funnel de Ventas
-                    <select id="source-filter" class="source-select" onchange="fetchLeads()">
-                        <option value="all">Todas las fuentes</option>
-                        <option value="Elia Web Widget">Elia Web Widget</option>
-                        <option value="Manual">Manual</option>
-                    </select>
-                </div>
-                <div style="height:200px;"><canvas id="funnelChart"></canvas></div>
-            </div>
-
-            <div class="card">
-                <div class="tabs">
-                    <div class="tab active" onclick="switchTab('today', this)">Hoy · Acción</div>
-                    <div class="tab" onclick="switchTab('pipeline', this)">Pipeline</div>
-                    <div class="tab" onclick="switchTab('followup', this)">Follow-up</div>
+        <div class="left-col">
+            <div class="card glass">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab('today', this)">Hoy</div>
+                        <div class="tab" onclick="switchTab('pipeline', this)">Pipeline</div>
+                        <div class="tab" onclick="switchTab('followup', this)">Seguimiento</div>
+                    </div>
+                    <button class="btn-add" onclick="openModal('modal-add-lead')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                        NUEVO LEAD
+                    </button>
                 </div>
 
-                <!-- HOY -->
+                <!-- TABS CONTENT -->
                 <div class="tab-panel active" id="tab-today">
                     <table>
-                        <thead><tr><th>Lead</th><th>Estado</th><th>Tarea actual</th><th>Acción</th></tr></thead>
+                        <thead><tr><th>Lead</th><th>Estado</th><th>Tarea</th><th>Acción</th></tr></thead>
                         <tbody id="tbody-today">
-                            <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Cargando...</td></tr>
+                            <tr><td colspan="4" style="text-align:center; padding:40px; color:var(--slate);">Cargando...</td></tr>
                         </tbody>
                     </table>
                 </div>
 
-                <!-- PIPELINE -->
                 <div class="tab-panel" id="tab-pipeline">
                     <table>
-                        <thead><tr><th>Lead</th><th>Estado</th><th>Actualizado</th><th>Tasks</th></tr></thead>
-                        <tbody id="tbody-pipeline">
-                            <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Pipeline cargando...</td></tr>
-                        </tbody>
+                        <thead><tr><th>Lead</th><th>Estado</th><th>Últ. Actualización</th><th>Tareas</th></tr></thead>
+                        <tbody id="tbody-pipeline"></tbody>
                     </table>
                 </div>
 
-                <!-- FOLLOW-UP -->
                 <div class="tab-panel" id="tab-followup">
                     <table>
-                        <thead><tr><th>Lead</th><th>Estado</th><th>Última Acción</th><th>Acción</th></tr></thead>
-                        <tbody id="tbody-followup">
-                            <tr><td colspan="4" style="color:var(--slate); text-align:center; padding:20px;">Sin seguimientos pendientes</td></tr>
-                        </tbody>
+                        <thead><tr><th>Lead</th><th>Estado</th><th>Tarea de Seguimiento</th><th>Acción</th></tr></thead>
+                        <tbody id="tbody-followup"></tbody>
                     </table>
                 </div>
             </div>
         </div>
 
-        <!-- RIGHT -->
-        <div>
-            <div class="card">
+        <div class="right-col">
+            <div class="card glass">
                 <div class="card-header">
-                    <span>⚡ Mis Tareas Hoy</span>
-                    <span class="badge-phase">Automatizado</span>
+                    <span>⚡ Mis Tareas</span>
+                    <span style="font-size:0.6rem; background:#fee2e2; color:#ef4444; padding:2px 6px; border-radius:4px;">AUTO</span>
                 </div>
-                <div class="task-list" id="task-list-mireia">
+                <div id="task-list-mireia" style="max-height:400px; overflow-y:auto; padding-right:5px;">
                     <div style="text-align:center; padding:20px; color:var(--slate);">Cargando tareas...</div>
                 </div>
             </div>
 
-            <div class="card">
-                <div class="card-header">Acciones Rápidas</div>
-                <a href="index.html#sales" class="action-btn">📊 Ver Master Hub</a>
-                <div class="action-btn" style="opacity: 0.5; cursor: not-allowed; justify-content: space-between;">
-                    <span>🎙️ Elia Voz</span>
-                    <span class="badge-phase">MVP</span>
+            <div class="card glass">
+                <div class="card-header">Herramientas Elia</div>
+                <div style="display:grid; gap:10px;">
+                    <a href="index.html#sales" class="action-btn" style="width:100%; border-radius:12px; justify-content:flex-start; padding:12px;">
+                        <span style="margin-right:12px;">📊</span> Ver Master Hub
+                    </a>
+                    <div class="action-btn" style="width:100%; border-radius:12px; justify-content:space-between; padding:12px; opacity:0.6; cursor:not-allowed;">
+                        <div style="display:flex; align-items:center;"><span style="margin-right:12px;">🎙️</span> Elia Voz</div>
+                        <span style="font-size:0.6rem; font-weight:700; background:var(--bg); padding:2px 6px; border-radius:4px;">MVP</span>
+                    </div>
+                    <button class="btn-product" onclick="openModal('modal-agent-wa')">
+                        <span>🎙️</span> CONSTRUCTOR AGENTE WA
+                    </button>
                 </div>
-                <a href="jorge_dashboard.html" target="_blank" class="action-btn">⚙️ Jorge Ops</a>
             </div>
 
-            <div class="card">
-                <div class="card-header">Elia Web Stats</div>
-                <div style="margin-bottom:14px;">
-                    <div class="kpi-label">Leads via Elia</div>
-                    <div style="font-size:1.8rem; font-weight:700; color:var(--teal);" id="m-elia-leads">—</div>
-                </div>
-                <div style="background:var(--bg); border-radius:10px; padding:12px; border:1px solid var(--border);">
-                    <p style="font-size:0.75rem; color:var(--slate); line-height:1.6;">Procesando leads B2B en tiempo real.</p>
+            <div class="card glass" style="background: linear-gradient(135deg, var(--teal), var(--prog)); color: white; border: none;">
+                <h4 style="margin-bottom:8px;">Estado del Sistema</h4>
+                <p style="font-size:0.8rem; opacity:0.9; margin-bottom:15px;">La IA Mireia está activa y procesando leads de Elia Web.</p>
+                <div style="background:rgba(255,255,255,0.1); padding:12px; border-radius:12px; font-size:0.75rem;">
+                    Último lead: <span id="last-lead-time">hace 5 min</span>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL IA -->
-    <div id="ai-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
-        <div style="background:var(--white); padding:2rem; border-radius:16px; width:500px; max-width:90%; box-shadow:0 20px 50px rgba(0,0,0,0.2);">
-            <h3 style="margin-bottom:1rem; display:flex; align-items:center; gap:8px;">✨ Sugerencia IA (Claude)</h3>
-            <p id="ai-status" style="font-size:0.85rem; color:var(--slate); margin-bottom:1rem;">Generando mensaje...</p>
-            
-            <div id="ai-results" style="display:none; max-height:60vh; overflow-y:auto; padding-right:10px;">
-                <h4 style="margin: 0 0 10px 0; font-size:0.9rem; color:var(--brand);">Primer Contacto</h4>
-                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">WhatsApp:</label>
-                <textarea id="ai-wa-initial" style="width:100%; height:80px; margin-bottom:1rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
-                
-                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">Email:</label>
-                <textarea id="ai-email-initial" style="width:100%; height:100px; margin-bottom:1.5rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
+    <!-- MODAL: ADD LEAD -->
+    <div id="modal-add-lead" class="modal-overlay" onclick="closeModalOnDimmer(event, 'modal-add-lead')">
+        <div class="modal">
+            <h3 style="margin-bottom:1.5rem;">Añadir Lead Manual</h3>
+            <form id="form-new-lead" onsubmit="handleNewLead(event)">
+                <div class="form-group">
+                    <label class="form-label">Nombre del Negocio / Persona</label>
+                    <input type="text" id="nl-name" class="form-input" placeholder="Ej: Peluquería Brillo" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email o WhatsApp (ID único)</label>
+                    <input type="text" id="nl-email" class="form-input" placeholder="email@ejemplo.com o +34..." required>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">
+                    <div class="form-group">
+                        <label class="form-label">Sector</label>
+                        <select id="nl-segment" class="form-input">
+                            <option value="peluqueria">Peluquería / Salón</option>
+                            <option value="fontanero">Fontanero / Oficios</option>
+                            <option value="estetica">Estética</option>
+                            <option value="otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Ciudad</label>
+                        <input type="text" id="nl-city" class="form-input" placeholder="Madrid">
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary" style="margin-top:10px;">GUARDAR LEAD Y ACTIVAR MIREIA</button>
+            </form>
+            <button onclick="closeModal('modal-add-lead')" style="position:absolute; top:20px; right:20px; background:none; border:none; color:var(--slate); cursor:pointer; font-size:1.2rem;">&times;</button>
+        </div>
+    </div>
 
-                <h4 style="margin: 0 0 10px 0; font-size:0.9rem; color:var(--brand);">Seguimiento (Follow-up)</h4>
-                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">WhatsApp:</label>
-                <textarea id="ai-wa-followup" style="width:100%; height:80px; margin-bottom:1rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
-                
-                <label style="font-size:0.75rem; font-weight:600; color:var(--slate);">Email:</label>
-                <textarea id="ai-email-followup" style="width:100%; height:100px; margin-bottom:1rem; padding:10px; border-radius:8px; border:1px solid var(--border); font-family:inherit; font-size:0.85rem;"></textarea>
-            </div>
+    <!-- MODAL: IA SUGGESTION -->
+    <div id="ai-modal" class="modal-overlay" onclick="closeModalOnDimmer(event, 'ai-modal')">
+        <div class="modal" style="width:650px; max-width:90%;">
+            <h3 style="margin-bottom:1rem; display:flex; align-items:center; gap:10px;">
+                <span style="background:var(--accent); color:white; width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:8px; font-size:1rem;">✨</span>
+                Sugerencia IA para <span id="ai-lead-name">...</span>
+            </h3>
+            <p id="ai-status" style="font-size:0.85rem; color:var(--slate); margin-bottom:1.5rem;">Analizando contexto...</p>
             
-            <div style="display:flex; justify-content:flex-end; gap:10px;">
-                <button onclick="document.getElementById('ai-modal').style.display='none'" style="padding:8px 16px; border-radius:8px; border:1px solid var(--border); background:var(--bg); cursor:pointer;">Cerrar</button>
+            <div id="ai-results" style="display:none; margin-top:20px; animation: slideUp 0.4s ease;">
+                <div class="ai-tabs" style="display:flex; gap:10px; margin-bottom:15px; border-bottom:1px solid var(--border); padding-bottom:10px;">
+                    <div class="tab active" onclick="switchAiTab('wa', this)">WhatsApp</div>
+                    <div class="tab" onclick="switchAiTab('email', this)">Email</div>
+                </div>
+                
+                <div id="ai-tab-wa" class="ai-tab-content">
+                    <textarea id="ai-whatsapp" class="glass" style="width:100%; height:180px; padding:15px; border-radius:12px; border:1px solid var(--border); font-family:inherit; resize:none; margin-bottom:15px; background:rgba(255,255,255,0.5);"></textarea>
+                </div>
+                <div id="ai-tab-email" class="ai-tab-content" style="display:none;">
+                    <textarea id="ai-email" class="glass" style="width:100%; height:180px; padding:15px; border-radius:12px; border:1px solid var(--border); font-family:inherit; resize:none; margin-bottom:15px; background:rgba(255,255,255,0.5);"></textarea>
+                </div>
+            
+            <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:20px;">
+                <button onclick="closeModal('ai-modal')" class="btn-action" style="padding:0 20px; border:1px solid var(--border);">Cerrar</button>
+                <button id="btn-open-client" class="btn-primary" style="width:auto; padding:0 20px; background:var(--prog);">Abrir App</button>
+                <button id="btn-copy-ai" class="btn-primary" style="width:auto; padding:0 20px;">Copiar</button>
             </div>
         </div>
     </div>
 
     <script>
-        let lang = localStorage.getItem('ofa_lang') || 'es';
-        function setLang(l) {
-            lang = l; localStorage.setItem('ofa_lang', l);
-            document.getElementById('btn-es').classList.toggle('active', l === 'es');
-            document.getElementById('btn-en').classList.toggle('active', l === 'en');
-        }
-
-        function switchTab(id, btn) {
-            document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + id).classList.add('active');
-            btn.classList.add('active');
-        }
-
-        function statusSelect(leadEmail, leadName, currentStatus) {
-            const map = {
-                'new': 'Nuevo', 'contacted': 'Contactado', 'interested': 'Interesado',
-                'demo_scheduled': 'Demo', 'demo_done': 'Demo Done', 'proposal_sent': 'Propuesta',
-                'closed_won': 'Cerrado ✓', 'closed_lost': 'Perdido', 'stalled': 'Parado'
-            };
-            let options = '';
-            for (const [val, label] of Object.entries(map)) {
-                options += `<option value="${val}" ${val === currentStatus ? 'selected' : ''}>${label.toUpperCase()}</option>`;
-            }
-            return `<select onchange="updateLeadStatus('${leadEmail}', '${leadName}', this.value)" class="badge" style="background:var(--bg); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; font-size:0.65rem; padding:4px 8px; font-weight:700;">${options}</select>`;
-        }
-
-        function actionButtons(email, name, segment, city, status) {
-            const cleanContact = (email || '').trim().replace(/\s+/g, '');
-            const isPhone = /^\+?[\d\s-]{9,}$/.test(cleanContact);
-            let buttons = `<div class="action-group">`;
-            if (isPhone) {
-                buttons += `<a href="https://wa.me/${cleanContact.replace('+', '')}" target="_blank" class="btn-action" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.6 8.38 8.38 0 0 1 3.8.9L21 3l-1.5 4.5Z"></path></svg></a>`;
-            } else if (cleanContact) {
-                buttons += `<a href="mailto:${cleanContact}?subject=Contacto de Elia Asistente&body=Hola ${name || ''}," class="btn-action" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg></a>`;
-            }
-            buttons += `<button onclick="navigator.clipboard.writeText('${cleanContact}')" class="btn-action" title="Copiar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"></rect><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"></path></svg></button>`;
-            
-            // Botón IA
-            const safeName = (name || '').replace(/'/g, "\\'");
-            const safeSegment = (segment || '').replace(/'/g, "\\'");
-            const safeCity = (city || '').replace(/'/g, "\\'");
-            const safeStatus = (status || 'new').replace(/'/g, "\\'");
-            buttons += `<button onclick="suggestMessageWithIA('${safeName}', '${safeSegment}', '${safeCity}', '${safeStatus}')" class="btn-action" title="Sugerir mensaje con IA" style="color: #8b5cf6; border-color: #ddd6fe;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.64 3.64-1.28-1.28a1.21 1.21 0 0 0-1.72 0L2.36 18.64a1.21 1.21 0 0 0 0 1.72l1.28 1.28a1.2 1.2 0 0 0 1.72 0L21.64 5.36a1.2 1.2 0 0 0 0-1.72Z"></path><path d="m14 7 3 3"></path><path d="M5 6v4"></path><path d="M19 14v4"></path><path d="M10 2v2"></path><path d="M7 8H3"></path><path d="M21 16h-4"></path><path d="M11 3H9"></path></svg></button>`;
-            
-            buttons += `</div>`;
-            return buttons;
-        }
-
-        function fmtDate(d) { return d ? new Date(d).toLocaleDateString('es-ES') : '—'; }
 
         const SUPA_URL = 'https://pzjdruihfqtflugypcgl.supabase.co';
         const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
-        // Apunta al backend en producción. En local, cambia a http://localhost:3001
-        const BACKEND_URL = 'https://api.optimumforall.com';
+        
+        // Dynamic BACKEND_URL: Use production by default, but localhost if on localhost
+        // Auto-detect backend: Production if on os.optimumforall.tech, otherwise localhost
+        const BACKEND_URL = (window.location.hostname === 'os.optimumforall.tech') 
+            ? 'https://api.optimumforall.com' 
+            : 'http://localhost:3001';
+        
         let supa = null;
         let funnelChart = null;
+        let currentAiLead = null;
+
+        function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function closeModalOnDimmer(e, id) { if(e.target.id === id) closeModal(id); }
+
+        function setLang(l) {
+            try {
+                localStorage.setItem('ofa_lang', l);
+            } catch (e) {
+                console.warn('Storage not available, skipping language persistence');
+            }
+            document.getElementById('btn-es').style.opacity = l === 'es' ? '1' : '0.5';
+            document.getElementById('btn-en').style.opacity = l === 'en' ? '1' : '0.5';
+        }
+
+        function showDetails(base64) {
+            const lead = JSON.parse(atob(base64));
+            const m = lead.metadata || {};
+            document.getElementById('det-name').textContent = lead.name;
+            
+            const rows = [
+                { l: '📍 Dirección', v: m.address || 'No disponible' },
+                { l: '📮 C.P.', v: m.postalCode || '—' },
+                { l: '🏢 Ciudad', v: m.city || lead.city || '—' },
+                { l: '🌐 Web', v: m.website ? `<a href="${m.website}" target="_blank" style="color:var(--teal);">${m.website}</a>` : 'No tiene' },
+                { l: '⭐ Rating', v: m.rating ? `${m.rating} estrellas (${m.reviews} reviews)` : 'Sin reviews' },
+                { l: '📱 Instagram', v: m.instagram ? `<a href="${m.instagram}" target="_blank" style="color:var(--accent);">${m.instagram}</a>` : '—' },
+                { l: '📘 Facebook', v: m.facebook ? `<a href="${m.facebook}" target="_blank" style="color:var(--prog);">${m.facebook}</a>` : '—' },
+                { l: '📂 Fuente', v: lead.source },
+                { l: '⏰ Importado', v: m.imported_at ? new Date(m.imported_at).toLocaleString('es-ES') : '—' }
+            ];
+
+            document.getElementById('det-content').innerHTML = rows.map(r => `
+                <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border); padding-bottom:8px;">
+                    <span style="font-weight:600; color:var(--slate);">${r.l}:</span>
+                    <span style="text-align:right;">${r.v}</span>
+                </div>
+            `).join('');
+            
+            openModal('details-modal');
+        }
+
+        function switchAiTab(id, btn) {
+            document.querySelectorAll('.ai-tab-content').forEach(c => c.style.display = 'none');
+            document.querySelectorAll('#ai-modal .tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('ai-tab-' + id).style.display = 'block';
+            btn.classList.add('active');
+            
+            // Show/Hide Gmail button only for email tab
+            document.getElementById('btn-open-gmail').style.display = id === 'email' ? 'block' : 'none';
+        }
 
         async function fetchLeads() {
             if (!supa) return;
-            const src = document.getElementById('source-filter').value;
+            const srcFilter = document.getElementById('source-filter')?.value || 'all';
+            const nicheFilter = document.getElementById('niche-filter')?.value || 'all';
+            
             try {
-                const { data: all } = await supa.from('leads').select('*').order('created_at', { ascending: false });
-                const { data: pendingTasks } = await supa.from('tasks').select('*').eq('status', 'pending');
+                const { data: all } = await supa.from('leads').select('*').order('updated_at', { ascending: false });
+                const { data: pendingTasks } = await supa.from('tasks').select('*').eq('status', 'in_progress');
                 if (!all) return;
-                const filtered = src === 'all' ? all : all.filter(l => l.source === src);
+                
+                // Actualizar filtro de nichos dinamicamente
+                updateNicheOptions(all);
+
+                let filtered = all;
+                if (srcFilter !== 'all') filtered = filtered.filter(l => l.source === srcFilter);
+                if (nicheFilter !== 'all') filtered = filtered.filter(l => (l.metadata?.segment || 'unknown') === nicheFilter);
 
                 document.getElementById('m-total').textContent = filtered.length;
-                document.getElementById('m-new').textContent = filtered.filter(l => l.status === 'new').length;
-                document.getElementById('m-demo').textContent = filtered.filter(l => l.status === 'demo_scheduled').length;
+                
+                // Stats Today
+                const todayStr = new Date().toISOString().split('T')[0];
+                const leadsToday = all.filter(l => (l.created_at || '').startsWith(todayStr));
+                document.getElementById('m-new-today').textContent = leadsToday.length;
                 document.getElementById('m-elia-leads').textContent = all.filter(l => l.source === 'Elia Web Widget').length;
 
-                // Tab: Hoy
-                const tbodyToday = document.getElementById('tbody-today');
-                const salesTasks = pendingTasks.filter(t => t.context === 'sales' && t.lead_email);
-                const todayLeads = filtered.filter(l => salesTasks.some(t => t.lead_email === l.email));
-                tbodyToday.innerHTML = todayLeads.length ? todayLeads.map(l => {
-                    const task = salesTasks.filter(t => t.lead_email === l.email).sort((a,b) => new Date(a.created_at) - new Date(b.created_at))[0];
-                    return `<tr><td><strong>${l.name||'—'}</strong><br><span style="color:var(--slate);font-size:0.7rem;">${l.email||''}</span></td><td>${statusSelect(l.email, l.name||'', l.status)}</td><td style="font-size:0.75rem;"><strong>${task.title}</strong></td><td><div style="display:flex; gap:5px;">${actionButtons(l.email, l.name, l.metadata?.segment, l.metadata?.city, l.status)}<button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></div></td></tr>`;
-                }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Sin tareas hoy</td></tr>';
+                renderTodayStats(leadsToday);
 
-                // Tab: Pipeline
-                const tbodyPipe = document.getElementById('tbody-pipeline');
-                tbodyPipe.innerHTML = filtered.map(l => {
-                    const tCount = pendingTasks.filter(t => t.lead_id === l.id).length;
-                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.email, l.name||'', l.status)}</td><td>${fmtDate(l.updated_at)}</td><td>${tCount > 0 ? `<span class="badge" style="background:var(--warn); color:white;">${tCount}</span>` : '—'}</td></tr>`;
-                }).join('');
+                // Last lead time
+                if (all[0]) {
+                    const diff = Math.floor((new Date() - new Date(all[0].created_at)) / 60000);
+                    document.getElementById('last-lead-time').textContent = diff < 60 ? `hace ${diff} min` : `hace ${Math.floor(diff/60)}h`;
+                }
 
-                // Tab: Follow-up
-                const tbodyFollow = document.getElementById('tbody-followup');
-                const followLeads = filtered.filter(l => pendingTasks.some(t => t.lead_email === l.email && t.title.toLowerCase().includes('segui')));
-                tbodyFollow.innerHTML = followLeads.length ? followLeads.map(l => {
-                    const task = pendingTasks.find(t => t.lead_email === l.email && t.title.toLowerCase().includes('segui'));
-                    return `<tr><td><strong>${l.name||'—'}</strong></td><td>${statusSelect(l.email, l.name||'', l.status)}</td><td style="color:var(--err); font-weight:600;">${task.title}</td><td><button class="badge" style="background:var(--success); color:white; border:none; cursor:pointer;" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓ HECHO</button></td></tr>`;
-                }).join('') : '<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Sin seguimientos</td></tr>';
-
+                // Render Tables
+                renderTableToday(filtered, pendingTasks);
+                renderTablePipeline(filtered, pendingTasks);
+                renderTableFollowup(filtered, pendingTasks);
                 renderFunnelChart(filtered);
             } catch(e) { console.error(e); }
         }
 
-        async function updateLeadStatus(email, name, newStatus) {
-            if(!email) { console.error("Lead email missing for upsert"); return; }
+        function updateNicheOptions(leads) {
+            const select = document.getElementById('niche-filter');
+            if (!select) return;
+            const currentVal = select.value;
+            const niches = [...new Set(leads.map(l => l.metadata?.segment || 'unknown'))];
+            
+            let html = '<option value="all">Todos los Nichos</option>';
+            niches.forEach(n => {
+                html += `<option value="${n}" ${currentVal === n ? 'selected' : ''}>${n.charAt(0).toUpperCase() + n.slice(1)}</option>`;
+            });
+            select.innerHTML = html;
+        }
+
+        function renderTodayStats(leads) {
+            const nicheContainer = document.getElementById('stats-niches-today');
+            const sourceContainer = document.getElementById('stats-source-today');
+            if (!nicheContainer || !sourceContainer) return;
+
+            const nicheCounts = {};
+            const sourceCounts = {};
+
+            leads.forEach(l => {
+                const n = l.metadata?.segment || 'unknown';
+                const s = l.source || 'manual';
+                nicheCounts[n] = (nicheCounts[n] || 0) + 1;
+                sourceCounts[s] = (sourceCounts[s] || 0) + 1;
+            });
+
+            nicheContainer.innerHTML = Object.entries(nicheCounts).slice(0, 3)
+                .map(([n, c]) => `${n.toUpperCase()} (${c})`).join(' · ') || 'Sin leads hoy';
+            
+            sourceContainer.innerHTML = Object.entries(sourceCounts).slice(0, 3)
+                .map(([s, c]) => `${s.replace('apify_', '').toUpperCase()} (${c})`).join(' · ') || 'Sin leads hoy';
+        }
+
+        async function syncApify() {
+            const btn = document.getElementById('btn-sync-apify');
+            const status = document.getElementById('sync-status');
+            const oldText = btn.textContent;
+            
+            btn.disabled = true;
+            btn.textContent = '⌛ Importando...';
+            status.textContent = 'Conectando con Apify...';
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/crm/sync-apify`, { method: 'POST' });
+                const data = await res.json();
+                
+                if (data.success) {
+                    status.textContent = '✅ ' + data.message;
+                    setTimeout(() => fetchLeads(), 2000);
+                } else {
+                    status.textContent = '❌ Error al sincronizar';
+                }
+            } catch (e) {
+                status.textContent = '❌ Error de red';
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = oldText;
+                }, 5000);
+            }
+        }
+
+        function renderTableToday(leads, tasks) {
+            const tbody = document.getElementById('tbody-today');
+            const salesTasks = tasks.filter(t => t.context === 'sales' && t.lead_email);
+            const activeLeads = leads.filter(l => salesTasks.some(t => t.lead_email === l.email));
+            
+            tbody.innerHTML = activeLeads.length ? activeLeads.map(l => {
+                const task = salesTasks.find(t => t.lead_email === l.email);
+                return `
+                    <tr>
+                        <td>
+                            <div style="font-weight:700;">${l.name || '—'}</div>
+                            <div style="font-size:0.7rem; color:var(--slate);">${l.email || ''}</div>
+                        </td>
+                        <td>${statusBadge(l.status)}</td>
+                        <td style="font-size:0.8rem; font-weight:500;">${task.title}</td>
+                        <td>
+                            <div class="action-group">
+                                ${actionButtons(l)}
+                                <button class="btn-action" style="color:var(--success); border-color:var(--success);" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')" title="Completar">✓</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('') : '<tr><td colspan="4" style="text-align:center; padding:40px; color:var(--slate);">Sin acciones urgentes hoy. ¡Buen trabajo!</td></tr>';
+        }
+
+        function renderTablePipeline(leads, tasks) {
+            const tbody = document.getElementById('tbody-pipeline');
+            tbody.innerHTML = leads.map(l => {
+                const tCount = tasks.filter(t => t.lead_email === l.email).length;
+                return `
+                    <tr>
+                        <td><strong>${l.name || '—'}</strong></td>
+                        <td>${statusSelect(l)}</td>
+                        <td>${new Date(l.updated_at).toLocaleDateString()}</td>
+                        <td>${tCount > 0 ? `<span style="background:var(--warn); color:white; padding:2px 8px; border-radius:6px; font-weight:700; font-size:0.7rem;">${tCount}</span>` : '<span style="color:var(--slate);">0</span>'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTableFollowup(leads, tasks) {
+            const tbody = document.getElementById('tbody-followup');
+            const followTasks = tasks.filter(t => t.title.toLowerCase().includes('segui') || t.title.toLowerCase().includes('esperar'));
+            const followLeads = leads.filter(l => followTasks.some(t => t.lead_email === l.email));
+            
+            tbody.innerHTML = followLeads.length ? followLeads.map(l => {
+                const task = followTasks.find(t => t.lead_email === l.email);
+                return `
+                    <tr>
+                        <td><strong>${l.name || '—'}</strong></td>
+                        <td>${statusBadge(l.status)}</td>
+                        <td style="color:var(--accent); font-weight:600;">${task.title}</td>
+                        <td>
+                            <button class="btn-action" style="color:var(--success);" onclick="completeTask('${task.id}', '${l.name}', '${task.title}', '${l.status}')">✓</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('') : '<tr><td colspan="4" style="text-align:center; padding:30px; color:var(--slate);">Sin seguimientos pendientes.</td></tr>';
+        }
+
+        function statusBadge(status) {
+            const map = { 'new': 'badge-new', 'contacted': 'badge-contacted', 'interested': 'badge-interested', 'won': 'badge-won' };
+            const label = { 'new': 'NUEVO', 'contacted': 'CONTACTADO', 'interested': 'INTERESADO', 'won': 'CERRADO', 'lost': 'PERDIDO', 'demo_scheduled': 'DEMO' };
+            return `<span class="badge ${map[status] || ''}" style="background:#f1f5f9; color:var(--slate);">${label[status] || status.toUpperCase()}</span>`;
+        }
+
+        function statusSelect(l) {
+            const map = { 'new': 'NUEVO', 'contacted': 'CONTACTADO', 'interested': 'INTERESADO', 'demo_scheduled': 'DEMO', 'won': 'GANADO', 'lost': 'PERDIDO' };
+            let options = '';
+            for (const [v, label] of Object.entries(map)) {
+                options += `<option value="${v}" ${v === l.status ? 'selected' : ''}>${label}</option>`;
+            }
+            return `<select onchange="updateLeadStatus('${l.email}', '${l.name}', this.value)" class="form-input" style="padding:4px 8px; font-size:0.7rem; font-weight:700; width:120px;">${options}</select>`;
+        }
+
+        function actionButtons(l) {
+            const emailField = (l.email || '').trim();
+            const metadataPhone = l.metadata?.phone || '';
+            
+            // Extraer y limpiar el telefono de la metadata siempre que exista
+            let cleanPhone = metadataPhone ? metadataPhone.replace(/\D/g, '') : '';
+            if (cleanPhone.length === 9) cleanPhone = '34' + cleanPhone;
+
+            // Si el email es el fallback de "no-email", intentamos sacar el telefono del email si no esta en metadata
+            if (emailField.endsWith('@no-email.ofa') && !cleanPhone) {
+                cleanPhone = emailField.split('@')[0].replace(/\D/g, '');
+                if (cleanPhone.length === 9) cleanPhone = '34' + cleanPhone;
+            }
+            
+            let btns = '';
+            // Si tenemos telefono (limpio o en metadata), mostramos boton WA
+            if (cleanPhone || metadataPhone) {
+                btns += `<button onclick="window.open('https://wa.me/${cleanPhone}', '_blank')" class="btn-action" title="WhatsApp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 1 1-7.6-13.6 8.38 8.38 0 0 1 3.8.9L21 3l-1.5 4.5Z"></path></svg></button>`;
+            } 
+            
+            // Si el email es real (no nuestro fallback), mostramos boton Email
+            const realEmail = emailField && !emailField.endsWith('@no-email.ofa') ? emailField : '';
+            if (realEmail) {
+                btns += `<button onclick="openEmail('${realEmail}')" class="btn-action" title="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"></path><path d="M22 2 11 13"></path></svg></button>`;
+            }
+            
+            const leadData = btoa(JSON.stringify({
+                name: l.name,
+                segment: l.metadata?.segment || 'negocio',
+                city: l.metadata?.city || 'local',
+                status: l.status,
+                phone: cleanPhone,
+                email: realEmail
+            }));
+
+            const fullMetadata = btoa(JSON.stringify(l));
+            
+            btns += `<button onclick="showDetails('${fullMetadata}')" class="btn-action" title="Ver Detalles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 16v-4"></path><path d="M12 8h.01"></path></svg></button>`;
+            btns += `<button onclick="prepareIA('${leadData}')" class="btn-action" title="IA Suggest" style="color:var(--accent); border-color:rgba(139, 92, 246, 0.3);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path></svg></button>`;
+            return btns;
+        }
+
+        function openWhatsApp(phone, text) {
+            console.log("📱 OFA WhatsApp Debug - Raw Phone:", phone);
+            // Aseguramos que el numero solo tenga digitos
+            const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
+            const waUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
+            
+            console.log("📱 OFA WhatsApp URL Generated:", waUrl);
+            
+            // Abrir en pestaña nueva
+            window.open(waUrl, '_blank');
+        }
+
+        function openEmail(email, subject = 'Propuesta Elia Web', body = '') {
+            const mailtoUrl = `mailto:${email || ''}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            console.log('📧 OFA Email URL Generated:', mailtoUrl);
+            
+            const link = document.createElement('a');
+            link.href = mailtoUrl;
+            document.body.appendChild(link);
+            
+            // Fallback detection
+            const start = Date.now();
+            link.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(link);
+                // Si despues de 500ms no ha pasado nada (seguimos en la misma pagina y no hubo blur), mostramos aviso
+                if (Date.now() - start < 1000) {
+                    const status = document.getElementById('ai-status');
+                    status.textContent = '⚠️ No se pudo abrir el correo automáticamente. Usa el botón "Copiar" abajo.';
+                    status.style.color = 'var(--warn)';
+                }
+            }, 500);
+        }
+
+        function prepareIA(base64Data) {
+            try {
+                const data = JSON.parse(atob(base64Data));
+                suggestMessageWithIA(data.name, data.segment, data.city, data.status, data.phone, data.email);
+            } catch (e) { console.error("Error parsing lead data", e); }
+        }
+
+        async function handleNewLead(e) {
+            e.preventDefault();
+            const payload = {
+                name: document.getElementById('nl-name').value,
+                email: document.getElementById('nl-email').value,
+                source: 'Manual',
+                metadata: {
+                    segment: document.getElementById('nl-segment').value,
+                    city: document.getElementById('nl-city').value
+                }
+            };
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/crm/upsert-lead`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) {
+                    closeModal('modal-add-lead');
+                    e.target.reset();
+                    fetchLeads(); fetchTasks();
+                }
+            } catch(err) { alert('Error conectando con el servidor'); }
+        }
+
+        async function updateLeadStatus(email, name, status) {
             try {
                 await fetch(`${BACKEND_URL}/api/crm/upsert-lead`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, name, status: newStatus })
+                    body: JSON.stringify({ email, name, status })
                 });
                 fetchLeads(); fetchTasks();
             } catch(e) { console.error(e); }
-        }
-
-        // Deprecated: logic moved to backend handleSalesTasks
-        async function triggerAutomatedTask(leadId, status) {
-            console.log("triggerAutomatedTask is now handled by the backend /api/crm/upsert-lead");
         }
 
         async function fetchTasks() {
             if (!supa) return;
             try {
                 const { data: tasks } = await supa.from('tasks').select('*')
-                    .eq('context', 'sales').eq('status', 'pending')
+                    .eq('context', 'sales').eq('status', 'in_progress')
                     .order('created_at', { ascending: false }).limit(20);
                 const list = document.getElementById('task-list-mireia');
-                if (!list) return;
-                list.innerHTML = (tasks && tasks.length) ? tasks.map(t => `<div class="task-item"><input type="checkbox" class="task-check" onclick="completeTask('${t.id}')"><div><div class="task-title">${t.title}</div><div class="task-meta">${t.lead_email || 'Lead'} · <span class="task-tag">SALES</span></div></div></div>`).join('') : '<div style="text-align:center; padding:20px; color:var(--slate);">Todo al día 🎉</div>';
+                list.innerHTML = tasks.length ? tasks.map(t => `
+                    <div class="task-item">
+                        <input type="checkbox" class="task-check" onclick="completeTask('${t.id}')">
+                        <div>
+                            <div class="task-title">${t.title}</div>
+                            <div class="task-meta">${t.lead_email || 'General'}</div>
+                        </div>
+                    </div>
+                `).join('') : '<div style="text-align:center; padding:30px; color:var(--slate);">✨ Tienes la bandeja limpia.</div>';
             } catch(e) { console.error(e); }
         }
 
-        async function completeTask(id, leadName, taskTitle, leadStatus) {
+        async function completeTask(id, name, title, status) {
             try {
                 await fetch(`${BACKEND_URL}/api/tasks/update`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ task_id: id, status: 'completed' })
+                    body: JSON.stringify({ task_id: id, status: 'done' })
                 });
-                if (taskTitle) {
-                    const keywords = ['Primer contacto', 'propuesta', 'Seguimiento', 'Onboard'];
-                    if (keywords.some(k => taskTitle.toLowerCase().includes(k.toLowerCase()))) {
-                        fetch('https://n8n.optimumforall.com/webhook/ofa-inbound-lead', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ text: `✅ *[Mireia]* completó: "${taskTitle}" → Lead: *${leadName}* (${leadStatus})` })
-                        }).catch(() => {});
-                    }
-                }
+                // Slack/n8n notify logic here if needed
                 fetchLeads(); fetchTasks();
             } catch(e) { console.error(e); }
         }
 
-        async function suggestMessageWithIA(name, segment, city, status) {
-            const modal = document.getElementById('ai-modal');
-            const statusText = document.getElementById('ai-status');
-            const resultsDiv = document.getElementById('ai-results');
-            const waIni = document.getElementById('ai-wa-initial');
-            const emIni = document.getElementById('ai-email-initial');
-            const waFol = document.getElementById('ai-wa-followup');
-            const emFol = document.getElementById('ai-email-followup');
+        async function suggestMessageWithIA(name, segment, city, status, phone, email) {
+            openModal('ai-modal');
+            document.getElementById('ai-lead-name').textContent = name;
+            document.getElementById('ai-status').textContent = 'Conectando con Claude...';
+            document.getElementById('ai-status').style.color = 'var(--slate)';
+            document.getElementById('ai-results').style.display = 'none';
             
-            modal.style.display = 'flex';
-            statusText.textContent = 'Analizando contexto y generando copy con Claude...';
-            resultsDiv.style.display = 'none';
-            waIni.value = ''; emIni.value = '';
-            waFol.value = ''; emFol.value = '';
+            // UI Adjustment: show/hide tabs based on availability
+            const waTab = document.querySelector('[onclick*="wa"]');
+            const emailTab = document.querySelector('[onclick*="email"]');
+            
+            if (!phone) {
+                waTab.style.display = 'none';
+                switchAiTab('email', emailTab);
+            } else {
+                waTab.style.display = 'block';
+                switchAiTab('wa', waTab);
+            }
+            emailTab.style.display = email ? 'block' : 'none';
 
             try {
-                const response = await fetch(`${BACKEND_URL}/api/crm/generate-outreach`, {
+                const res = await fetch(`${BACKEND_URL}/api/crm/generate-outreach`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ name, segment, city, status })
                 });
-                const data = await response.json();
-                
+                const data = await res.json();
                 if (data.success) {
-                    waIni.value = data.whatsapp_initial || '';
-                    emIni.value = data.email_initial || '';
-                    waFol.value = data.whatsapp_followup || '';
-                    emFol.value = data.email_followup || '';
-                    statusText.textContent = 'Sugerencia completada. Puedes revisar y editar los mensajes antes de copiarlos.';
-                    resultsDiv.style.display = 'block';
+                    document.getElementById('ai-whatsapp').value = data.whatsapp;
+                    document.getElementById('ai-email').value = data.email;
+                    document.getElementById('ai-status').textContent = 'Sugerencia lista:';
+                    document.getElementById('ai-status').style.color = 'var(--success)';
+                    document.getElementById('ai-results').style.display = 'block';
+                    
+                    // Setup copy button
+                    document.getElementById('btn-copy-ai').onclick = () => {
+                        const activeTab = document.getElementById('ai-tab-wa').style.display !== 'none' ? 'wa' : 'email';
+                        const text = document.getElementById(`ai-${activeTab === 'wa' ? 'whatsapp' : 'email'}`).value;
+                        navigator.clipboard.writeText(text);
+                        const btn = document.getElementById('btn-copy-ai');
+                        const oldText = btn.textContent;
+                        btn.textContent = '¡Copiado!';
+                        btn.style.background = 'var(--success)';
+                        setTimeout(() => { btn.textContent = oldText; btn.style.background = ''; }, 2000);
+                    };
+
+                    // Setup open client button
+                    document.getElementById('btn-open-client').onclick = () => {
+                        const activeTab = document.getElementById('ai-tab-wa').style.display !== 'none' ? 'wa' : 'email';
+                        const text = document.getElementById(`ai-${activeTab === 'wa' ? 'whatsapp' : 'email'}`).value;
+                        if (activeTab === 'wa') {
+                            openWhatsApp(phone, text);
+                        } else {
+                            const lines = text.split('\n');
+                            const subjectLine = lines.find(l => l.startsWith('Asunto:')) || 'Asunto: Propuesta Elia Web';
+                            const bodyText = text.replace(subjectLine, '').trim();
+                            openEmail(email, subjectLine.replace('Asunto:', '').trim(), bodyText);
+                        }
+                    };
+
+                    // Setup Gmail button
+                    document.getElementById('btn-open-gmail').onclick = () => {
+                        const text = document.getElementById('ai-email').value;
+                        const lines = text.split('\n');
+                        const subjectLine = lines.find(l => l.startsWith('Asunto:')) || 'Asunto: Propuesta Elia Web';
+                        const body = text.replace(subjectLine, '').trim();
+                        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email || ''}&su=${encodeURIComponent(subjectLine.replace('Asunto:', '').trim())}&body=${encodeURIComponent(body)}`;
+                        window.open(gmailUrl, '_blank');
+                    };
                 } else {
-                    statusText.textContent = 'Error: ' + (data.error || 'No se pudo generar.');
+                    throw new Error(data.error || 'Error desconocido');
                 }
-            } catch (e) {
-                statusText.textContent = 'Error de conexión: ' + e.message;
+            } catch(e) { 
+                console.error(e);
+                document.getElementById('ai-status').textContent = 'Error: ' + e.message;
+                document.getElementById('ai-status').style.color = 'var(--err)';
             }
         }
 
         function renderFunnelChart(leads) {
-            const statuses = ['new','contacted','demo_scheduled','proposal_sent','closed_won'];
-            const counts = statuses.map(s => leads.filter(l => l.status === s).length);
+            const stages = ['new', 'contacted', 'interested', 'demo_scheduled', 'won'];
+            const data = stages.map(s => leads.filter(l => l.status === s).length);
             if (funnelChart) funnelChart.destroy();
             funnelChart = new Chart(document.getElementById('funnelChart'), {
                 type: 'bar',
-                data: { labels: ['Nuevo','Contactado','Demo','Presu','Cierre'], datasets: [{ data: counts, backgroundColor: ['#38bdf8','#818cf8','#fb923c','#fbbf24','#34d399'], borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+                data: {
+                    labels: ['Nuevo', 'Contactado', 'Interesado', 'Demo', 'Cerrado'],
+                    datasets: [{
+                        data: data,
+                        backgroundColor: ['#e2e8f0', '#0ea5e9', '#6366f1', '#f59e0b', '#10b981'],
+                        borderRadius: 12,
+                        barThickness: 40
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { display: false }, ticks: { display: false } }, x: { grid: { display: false } } }
+                }
             });
         }
 
         function toggleTheme() {
-            const current = document.documentElement.getAttribute('data-theme');
-            const target = current === 'dark' ? 'light' : 'dark';
+            const curr = document.documentElement.getAttribute('data-theme');
+            const target = curr === 'dark' ? 'light' : 'dark';
             document.documentElement.setAttribute('data-theme', target);
-            localStorage.setItem('ofa_theme', target);
+            try { localStorage.setItem('ofa_theme', target); } catch(e) {}
             document.getElementById('theme-icon').textContent = target === 'dark' ? '☀️' : '🌙';
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            const savedTheme = localStorage.getItem('ofa_theme') || 'light';
+            let savedTheme = 'light';
+            try { savedTheme = localStorage.getItem('ofa_theme') || 'light'; } catch(e) {}
             document.documentElement.setAttribute('data-theme', savedTheme);
             document.getElementById('theme-icon').textContent = savedTheme === 'dark' ? '☀️' : '🌙';
-            const d = new Date();
-            document.getElementById('top-date').textContent = d.toLocaleDateString('es-ES', { weekday:'short', day:'numeric', month:'short' }).toUpperCase();
-            setLang(lang);
+            document.getElementById('top-date').textContent = new Date().toLocaleDateString('es-ES', { month: 'long', day: 'numeric' }).toUpperCase();
+            
             if (window.supabase) {
-                supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+                supa = window.supabase.createClient(SUPA_URL, SUPA_KEY, {
+                    auth: { persistSession: false }
+                });
                 fetchLeads(); fetchTasks();
+                setInterval(() => { fetchLeads(); fetchTasks(); }, 30000); // Auto-refresh 30s
             }
         });
     </script>
 </body>
 </html>
+

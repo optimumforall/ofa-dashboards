@@ -79,12 +79,12 @@
             es: {
                 'nav-home': 'Vista General', 'nav-sales': 'Ventas CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finanzas', 'nav-clients': 'Clientes',
-                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-settings': 'Configuración'
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-security': 'Seguridad', 'nav-settings': 'Configuración'
             },
             en: {
                 'nav-home': 'Overview', 'nav-sales': 'Sales CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finance', 'nav-clients': 'Clients',
-                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-settings': 'Settings'
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-security': 'Security', 'nav-settings': 'Settings'
             }
         };
 
@@ -173,6 +173,7 @@
             <button class="nav-btn" data-mod="legal" onclick="switchModule('legal', this)"><span>⚖️</span><span data-i18n="nav-legal">Legal & Docs</span></button>
             <button class="nav-btn" data-mod="finance" onclick="switchModule('finance', this)"><span>💰</span><span data-i18n="nav-finance">Finanzas</span></button>
             <button class="nav-btn" data-mod="ops" onclick="switchModule('ops', this)"><span>🛠️</span><span data-i18n="nav-ops">Ops & Bóveda</span></button>
+            <button class="nav-btn" data-mod="security" onclick="switchModule('security', this)"><span>🔒</span><span data-i18n="nav-security">Seguridad</span></button>
             <button class="nav-btn" data-mod="settings" onclick="switchModule('settings', this)"><span>⚙️</span><span data-i18n="nav-settings">Configuración</span></button>
         </nav>
         
@@ -251,6 +252,18 @@
                         <div style="font-size:0.7rem; color:var(--slate);">Technical Dashboard</div>
                         <a href="vojislav_dashboard.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Acceso ↗</a>
                     </div>
+                </div>
+            </div>
+
+            <!-- MINI PANEL SEGURIDAD -->
+            <div class="card" id="home-security-panel" style="cursor: pointer; transition: 0.2s; border-left: 4px solid var(--slate-light);" onclick="document.querySelector('.nav-btn[data-mod=\'security\']').click()">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div id="home-sec-icon" style="font-size: 2rem; color: var(--slate-light);">🛡️</div>
+                    <div>
+                        <div style="font-weight: 700; font-size: 1rem;">Seguridad del Sistema</div>
+                        <div id="home-sec-text" style="font-size: 0.85rem; color: var(--slate);">Cargando estado...</div>
+                    </div>
+                    <div style="margin-left: auto; color: var(--ofa-teal); font-size: 0.8rem; font-weight: 600;">Ver detalles →</div>
                 </div>
             </div>
 
@@ -394,14 +407,25 @@
                         <a href="https://elia-web.vercel.app" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso ↗</a>
                     </div>
                 </div>
+
                 <div class="card">
-                    <div class="card-header">🎙️ Noa Voice</div>
-                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Agente de voz con memoria a largo plazo (Retell/ElevenLabs).</p>
+                    <div class="card-header">📲 OFA WhatsApp Agent</div>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de agentes de WhatsApp para negocios locales (respuesta, filtros y agenda simple).</p>
                     <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:rgba(129,140,248,0.1); color:var(--status-prog);">ALPHA</span>
-                        <a href="https://noa.optimumforall.es" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso ↗</a>
+                        <span class="badge" style="background:#e0f2fe; color:#0ea5e9;">BETA</span>
+                        <a href="whatsapp_agent_builder.html" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
                     </div>
                 </div>
+
+                <div class="card">
+                    <div class="card-header">🗣️ OFA Voice Agent</div>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de agentes de voz para atender llamadas y enviar resúmenes.</p>
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <span class="badge" style="background:#fee2e2; color:#ef4444;">ALPHA</span>
+                        <a href="voice_agent_builder.html" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
+                    </div>
+                </div>
+
                 <div class="card">
                     <div class="card-header">🏗️ Web Constructor</div>
                     <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Crea landings y webs optimizadas para IA en minutos.</p>
@@ -410,23 +434,6 @@
                         <a href="https://lovable.dev" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
                     </div>
                 </div>
-                <div class="card">
-                    <div class="card-header">📲 WhatsApp Agent Builder</div>
-                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de flujos ManyChat + n8n para WhatsApp.</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:rgba(52,211,153,0.1); color:#059669;">ACTIVE</span>
-                        <a href="https://app.manychat.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Configurar ↗</a>
-                    </div>
-                </div>
-                <div class="card">
-                    <div class="card-header">🗣️ Voice Agent Builder</div>
-                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Dashboard central para agentes de voz (RetellAI / Base44).</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:rgba(129,140,248,0.1); color:#6366f1;">NEW</span>
-                        <a href="https://auth.retellai.com" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso Retell ↗</a>
-                    </div>
-                </div>
-
             </div>
         </section>
 
@@ -600,6 +607,69 @@
             </div>
         </section>
 
+        <!-- SECURITY MODULE -->
+        <section id="module-security" class="module">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="font-size: 1.2rem; font-family: var(--font-head); font-weight: 600;">Estado de Seguridad Global</h2>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="window.open('https://supabase.com/dashboard/project/pzjdruihfqtflugypcgl/advisors', '_blank')" class="badge" style="background:var(--bg-card); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; padding:8px 12px;">Supabase Advisors ↗</button>
+                    <button onclick="window.open('https://n8n.optimumforall.com/credentials', '_blank')" class="badge" style="background:var(--bg-card); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; padding:8px 12px;">n8n Credenciales ↗</button>
+                    <button onclick="registrarIncidenteManual()" class="badge" style="background:var(--status-err); color:white; border:none; cursor:pointer; padding:8px 12px;">+ Registrar Incidente Manual</button>
+                </div>
+            </div>
+
+            <div class="grid-4" id="sec-kpis">
+                <div class="card" id="sec-card-supabase">
+                    <div class="kpi-title">Supabase RLS</div>
+                    <div class="kpi-val" style="font-size: 1.5rem;" id="sec-stat-supabase">Cargando...</div>
+                    <div style="font-size: 0.7rem; color: var(--slate); margin-top: 5px;" id="sec-time-supabase">--</div>
+                </div>
+                <div class="card" id="sec-card-backend">
+                    <div class="kpi-title">Backend API & Auth</div>
+                    <div class="kpi-val" style="font-size: 1.5rem;" id="sec-stat-backend">Cargando...</div>
+                    <div style="font-size: 0.7rem; color: var(--slate); margin-top: 5px;" id="sec-time-backend">--</div>
+                </div>
+                <div class="card" id="sec-card-n8n">
+                    <div class="kpi-title">n8n & Webhooks</div>
+                    <div class="kpi-val" style="font-size: 1.5rem;" id="sec-stat-n8n">Cargando...</div>
+                    <div style="font-size: 0.7rem; color: var(--slate); margin-top: 5px;" id="sec-time-n8n">--</div>
+                </div>
+                <div class="card" id="sec-card-keys">
+                    <div class="kpi-title">Claves & Secretos</div>
+                    <div class="kpi-val" style="font-size: 1.5rem;" id="sec-stat-keys">Cargando...</div>
+                    <div style="font-size: 0.7rem; color: var(--slate); margin-top: 5px;" id="sec-time-keys">--</div>
+                </div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <div class="card-header">
+                        <span>Alertas Recientes (No Resueltas)</span>
+                        <span id="sec-alerts-badge" class="badge" style="background:var(--status-err); color:white;">0</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Severidad</th><th>Origen</th><th>Título / Descripción</th><th>Fecha</th><th>Acción</th></tr></thead>
+                            <tbody id="sec-alerts-tbody">
+                                <tr><td colspan="5" style="text-align:center; padding:20px; color:var(--slate);">Cargando alertas...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">Últimos Chequeos Automáticos</div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead><tr><th>Componente</th><th>Estado</th><th>Detalle</th><th>Fecha</th></tr></thead>
+                            <tbody id="sec-checks-tbody">
+                                <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Cargando chequeos...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- SETTINGS -->
         <section id="module-settings" class="module">
             <div class="grid-2">
@@ -678,12 +748,16 @@
                 
                 addLogEntry('Supabase Connection established', 'DB');
                 fetchData();
+                fetchSecurityData();
             } catch(e) {
                 console.error("Init Error:", e);
                 addLogEntry('System init failure', 'ERR');
             }
 
-            setInterval(fetchData, 60000);
+            setInterval(() => {
+                fetchData();
+                fetchSecurityData();
+            }, 60000);
             setTimeout(() => addLogEntry('Elia Widget: Monitoring active', 'WEB'), 1000);
             setTimeout(() => addLogEntry('Security Layer: Verified', 'SEC'), 2000);
         }
@@ -766,6 +840,141 @@
             } catch(e) {
                 console.error("Update Error:", e);
                 alert("Error al actualizar lead");
+            }
+        }
+
+        async function fetchSecurityData() {
+            if (!supabase) return;
+            try {
+                // Fetch summary for mini-panel
+                const { data: alertsData } = await supabase.from('security_alerts').select('*').eq('tenant_id', 'OFA').eq('resolved', false).order('created_at', { ascending: false });
+                
+                const alerts = alertsData || [];
+                const criticals = alerts.filter(a => a.severity === 'critical').length;
+                const warnings = alerts.filter(a => a.severity === 'warning').length;
+                
+                // Update home mini-panel
+                const homePanel = document.getElementById('home-security-panel');
+                const homeIcon = document.getElementById('home-sec-icon');
+                const homeText = document.getElementById('home-sec-text');
+                
+                if (criticals > 0) {
+                    homePanel.style.borderLeftColor = 'var(--status-err)';
+                    homeIcon.style.color = 'var(--status-err)';
+                    homeText.textContent = `CRÍTICO: ${criticals} alertas abiertas. Actúa inmediatamente.`;
+                } else if (warnings > 0) {
+                    homePanel.style.borderLeftColor = 'var(--status-warn)';
+                    homeIcon.style.color = 'var(--status-warn)';
+                    homeText.textContent = `Atención: ${warnings} avisos pendientes de revisión.`;
+                } else {
+                    homePanel.style.borderLeftColor = 'var(--status-prog)'; // verde/azul ok
+                    homeIcon.style.color = 'var(--status-prog)';
+                    homeText.textContent = `OK: Sin alertas críticas ni avisos.`;
+                }
+
+                // Update Security Dashboard - Alerts Table
+                document.getElementById('sec-alerts-badge').textContent = alerts.length;
+                const tbodyAlerts = document.getElementById('sec-alerts-tbody');
+                if (alerts.length === 0) {
+                    tbodyAlerts.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--slate);">No hay alertas de seguridad pendientes. ¡Todo en orden! 🎉</td></tr>`;
+                } else {
+                    tbodyAlerts.innerHTML = alerts.map(a => {
+                        const sevColor = a.severity === 'critical' ? 'var(--status-err)' : (a.severity === 'warning' ? 'var(--status-warn)' : 'var(--ofa-teal)');
+                        return `<tr>
+                            <td><span class="badge" style="background:${sevColor}20; color:${sevColor}; text-transform:uppercase;">${a.severity}</span></td>
+                            <td style="text-transform:capitalize;">${a.source}</td>
+                            <td><strong>${a.title}</strong><div style="font-size:0.75rem; color:var(--slate);">${a.description || ''}</div></td>
+                            <td style="font-size:0.75rem; color:var(--slate);">${new Date(a.created_at).toLocaleString()}</td>
+                            <td><button onclick="resolveSecurityAlert('${a.id}')" class="badge" style="background:#f1f5f9; color:var(--charcoal); border:1px solid var(--border); cursor:pointer;">Resolver ✓</button></td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Fetch latest status checks
+                const { data: statusData } = await supabase.from('security_status').select('*').eq('tenant_id', 'OFA').order('checked_at', { ascending: false });
+                const checks = statusData || [];
+                
+                // Keep only latest per component
+                const seen = new Set();
+                const latestChecks = checks.filter(row => {
+                    if (seen.has(row.component)) return false;
+                    seen.add(row.component);
+                    return true;
+                });
+
+                // Render checks table
+                const tbodyChecks = document.getElementById('sec-checks-tbody');
+                if (latestChecks.length === 0) {
+                    tbodyChecks.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">No hay registros de chequeos automáticos aún.</td></tr>`;
+                } else {
+                    tbodyChecks.innerHTML = latestChecks.map(c => {
+                        const sColor = c.status === 'ok' ? 'var(--status-prog)' : (c.status === 'critical' ? 'var(--status-err)' : 'var(--status-warn)');
+                        return `<tr>
+                            <td style="font-weight:600;">${c.component}</td>
+                            <td><span class="badge" style="background:${sColor}20; color:${sColor}; text-transform:uppercase;">${c.status}</span></td>
+                            <td><div style="font-size:0.8rem;">${c.summary}</div></td>
+                            <td style="font-size:0.75rem; color:var(--slate);">${new Date(c.checked_at).toLocaleString()}</td>
+                        </tr>`;
+                    }).join('');
+                }
+
+                // Update Top KPI Cards
+                const updateKpiCard = (comp, titleOverride) => {
+                    const rec = latestChecks.find(c => c.component === comp);
+                    const elStat = document.getElementById(`sec-stat-${comp === 'backend_api' ? 'backend' : (comp === 'n8n_webhooks' ? 'n8n' : (comp === 'keys_and_secrets' ? 'keys' : 'supabase'))}`);
+                    const elTime = document.getElementById(`sec-time-${comp === 'backend_api' ? 'backend' : (comp === 'n8n_webhooks' ? 'n8n' : (comp === 'keys_and_secrets' ? 'keys' : 'supabase'))}`);
+                    const card = document.getElementById(`sec-card-${comp === 'backend_api' ? 'backend' : (comp === 'n8n_webhooks' ? 'n8n' : (comp === 'keys_and_secrets' ? 'keys' : 'supabase'))}`);
+                    
+                    if (rec) {
+                        elStat.textContent = rec.status.toUpperCase();
+                        elStat.style.color = rec.status === 'ok' ? 'var(--status-prog)' : (rec.status === 'critical' ? 'var(--status-err)' : 'var(--status-warn)');
+                        card.style.borderLeft = `3px solid ${elStat.style.color}`;
+                        elTime.textContent = `Último chequeo: ${new Date(rec.checked_at).toLocaleTimeString()}`;
+                    } else {
+                        elStat.textContent = 'PENDIENTE';
+                        elStat.style.color = 'var(--slate)';
+                        card.style.borderLeft = `3px solid var(--border)`;
+                    }
+                };
+
+                updateKpiCard('supabase');
+                updateKpiCard('backend_api');
+                updateKpiCard('n8n_webhooks');
+                updateKpiCard('keys_and_secrets');
+
+            } catch (e) {
+                console.error("Fetch Security Error:", e);
+            }
+        }
+
+        async function resolveSecurityAlert(id) {
+            if (!supabase) return;
+            try {
+                await supabase.from('security_alerts').update({ resolved: true, resolved_at: new Date().toISOString() }).eq('id', id);
+                fetchSecurityData();
+            } catch (e) {
+                console.error("Error resolving alert:", e);
+                alert("Error al resolver alerta");
+            }
+        }
+
+        async function registrarIncidenteManual() {
+            const desc = prompt("Describe brevemente el incidente o hallazgo de seguridad:");
+            if (!desc) return;
+            if (!supabase) return;
+            try {
+                await supabase.from('security_alerts').insert({
+                    tenant_id: 'OFA',
+                    severity: 'warning',
+                    source: 'manual',
+                    title: 'Incidente reportado manualmente',
+                    description: desc,
+                    resolved: false
+                });
+                fetchSecurityData();
+                alert("Incidente registrado y visible en alertas.");
+            } catch (e) {
+                console.error("Error logging manual incident:", e);
             }
         }
 

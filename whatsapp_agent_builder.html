@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA | WhatsApp Agent Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc; --white: #ffffff; --charcoal: #1e293b; --slate: #64748b;
+            --teal: #0ea5e9; --border: #f1f5f9; --accent: #8b5cf6; --prog: #6366f1;
+            --radius: 16px;
+        }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--charcoal); padding: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .card { background: var(--white); padding: 2.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--slate); margin-bottom: 8px; }
+        .form-input { 
+            width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); 
+            background: #fdfdfd; font-family: inherit; font-size: 0.9rem; outline: none; transition: 0.2s;
+        }
+        .form-input:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1); }
+        .btn-save { 
+            background: linear-gradient(135deg, var(--accent), var(--prog)); color: white; border: none; 
+            padding: 14px 28px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -5px rgba(139, 92, 246, 0.4); }
+        .btn-back { color: var(--slate); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+        .badge-beta { background: #fee2e2; color: #ef4444; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <a href="index.html#factory" class="btn-back">← Volver a App Factory</a>
+                <h1 style="margin-top:10px;">📲 OFA WhatsApp Agent <span class="badge-beta">BETA</span></h1>
+                <p style="color:var(--slate); font-size:0.9rem;">Constructor de agentes de WhatsApp para negocios locales (respuesta, filtros y agenda simple).</p>
+            </div>
+            <div style="display:flex; gap:12px;">
+                <a href="whatsapp_sandbox.html" class="btn-save" style="background:var(--teal); text-decoration:none; display:flex; align-items:center; gap:8px;">
+                    <span>📱</span> Probar en Sandbox
+                </a>
+                <button onclick="saveAgent()" class="btn-save">Guardar Agente</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Nombre del Negocio</label>
+                    <input type="text" id="wa-biz-name" class="form-input" placeholder="Ej: Peluquería Brisa">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Nicho / Sector</label>
+                    <select id="wa-segment" class="form-input">
+                        <option value="peluqueria">Peluquería</option>
+                        <option value="manicura">Manicura / Uñas</option>
+                        <option value="barberia">Barbería</option>
+                        <option value="estetica">Estética</option>
+                        <option value="fontanero">Fontanero</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ciudad</label>
+                    <input type="text" id="wa-city" class="form-input" placeholder="Cunit">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Número WhatsApp (Agente)</label>
+                    <input type="text" id="wa-phone" class="form-input" placeholder="34600112233">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notificar Resumen a (Dueño)</label>
+                    <input type="text" id="wa-owner" class="form-input" placeholder="34600112233">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Horario de Atención</label>
+                    <input type="text" id="wa-hours" class="form-input" placeholder="Lun-Vie 9:00 - 20:00">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Instrucciones / Notas para la IA</label>
+                    <textarea id="wa-notes" class="form-input" style="height:120px; resize:none;" placeholder="Instrucciones sobre precios, servicios prohibidos, tono..."></textarea>
+                </div>
+            </div>
+            <div id="wa-status" style="margin-top:20px; text-align:center; font-weight:600; display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:3001';
+
+        async function saveAgent() {
+            const status = document.getElementById('wa-status');
+            status.style.display = 'block';
+            status.textContent = '⌛ Guardando en Supabase...';
+            status.style.color = 'var(--slate)';
+
+            const payload = {
+                business_name: document.getElementById('wa-biz-name').value,
+                segment: document.getElementById('wa-segment').value,
+                city: document.getElementById('wa-city').value,
+                whatsapp_number: document.getElementById('wa-phone').value,
+                owner_notification_number: document.getElementById('wa-owner').value,
+                opening_hours: document.getElementById('wa-hours').value,
+                notes: document.getElementById('wa-notes').value
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/agents/whatsapp`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    status.textContent = '✅ Agente guardado con éxito. Ya puedes conectar el webhook.';
+                    status.style.color = 'var(--teal)';
+                } else {
+                    status.textContent = '❌ Error: ' + (data.error || 'No se pudo guardar');
+                    status.style.color = '#ef4444';
+                }
+            } catch (e) {
+                status.textContent = '❌ Error de conexión con el backend.';
+                status.style.color = '#ef4444';
+            }
+        }
+    </script>
+</body>
+</html>

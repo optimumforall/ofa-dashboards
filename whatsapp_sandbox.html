@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA | WhatsApp Sandbox Simulator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --wa-bg: #e5ddd5; --wa-header: #075e54; --wa-bubble-me: #dcf8c6; --wa-bubble-agent: #ffffff;
+            --radius: 12px; --charcoal: #1e293b;
+        }
+        body { font-family: 'Outfit', sans-serif; background: #f0f2f5; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
+        .header { background: var(--wa-header); color: white; padding: 15px 25px; display: flex; align-items: center; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+        .chat-area { flex-grow: 1; background: var(--wa-bg); padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        .bubble { max-width: 70%; padding: 10px 15px; border-radius: 10px; font-size: 0.95rem; line-height: 1.4; position: relative; box-shadow: 0 1px 2px rgba(0,0,0,0.1); color: #000000 !important; }
+        .bubble.me { align-self: flex-end; background: var(--wa-bubble-me); border-top-right-radius: 0; }
+        .bubble.agent { align-self: flex-start; background: #ffffff !important; border-top-left-radius: 0; color: #111111 !important; }
+        .footer { background: #f0f2f5; padding: 15px; display: flex; gap: 10px; border-top: 1px solid #ddd; }
+        input { flex-grow: 1; padding: 12px 20px; border-radius: 30px; border: none; outline: none; font-size: 0.95rem; }
+        button { background: #075e54; color: white; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 700; }
+        .summary-card { background: #fff3cd; padding: 15px; border-radius: 10px; border: 1px solid #ffeeba; margin-top: 20px; font-size: 0.85rem; display: none; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="avatar">💇</div>
+        <div style="display:flex; flex-direction:column;">
+            <div style="font-weight:700;" id="agent-name-header">WhatsApp Sandbox Simulator</div>
+            <div style="display:flex; align-items:center; margin-top:2px;">
+                <div id="status-dot" style="width:8px; height:8px; border-radius:50%; background:#ccc;"></div>
+                <div id="status-text" style="font-size:0.7rem; opacity:0.8; margin-left:5px;">Verificando...</div>
+            </div>
+        </div>
+        <div style="margin-left:auto; display:flex; gap:10px; align-items:center;">
+            <select id="agent-selector" style="font-size: 0.8rem; padding: 4px; border-radius: 4px;" onchange="loadSelectedAgent()">
+                <option value="test_cunit">Demo: Peluquería Cunit</option>
+            </select>
+            <button onclick="checkStatus()" style="background:rgba(255,255,255,0.2); color:white; border:none; padding:4px 8px; border-radius:4px; font-size:0.7rem; cursor:pointer;">Re-conectar</button>
+            <a href="agent_factory.html" style="color:white; text-decoration:none; font-size:0.8rem; font-weight:600;">Constructor</a>
+        </div>
+    </div>
+
+    <div class="chat-area" id="chat-box">
+        <!-- Mensajes aqui -->
+        <div class="bubble agent">Hola! Soy el asistente de <b>Test Peluquería Cunit</b>. ¿En qué puedo ayudarte hoy? ✂️</div>
+    </div>
+
+    <div class="summary-card" id="summary-view">
+        <strong>📋 Resumen para el Dueño:</strong>
+        <div id="summary-text" style="margin-top:5px; white-space:pre-wrap;"></div>
+    </div>
+
+    <div class="footer">
+        <input type="text" id="user-input" placeholder="Escribe un mensaje..." onkeypress="if(event.key==='Enter') sendMessage()">
+        <button onclick="sendMessage()">ENVIAR</button>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:3001';
+        const chatBox = document.getElementById('chat-box');
+        let conversation = [];
+
+        async function sendMessage() {
+            const input = document.getElementById('user-input');
+            const text = input.value.trim();
+            if(!text) return;
+
+            // Add user bubble
+            addBubble(text, 'me');
+            input.value = '';
+            conversation.push({ role: 'user', content: text });
+
+            // Simulate Agent thinking
+            const loadingBubble = addBubble('...', 'agent');
+            
+            try {
+                // LLAMAMOS AL BACKEND PARA PROCESAR EL MENSAJE CON CLAUDE
+                const res = await fetch(`${BACKEND_URL}/api/agents/whatsapp/simulate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        message: text,
+                        history: conversation.slice(0, -1),
+                        agent_id: 'test_cunit' // Mock ID
+                    })
+                });
+                const data = await res.json();
+                console.log('Backend Reply:', data);
+                
+                loadingBubble.remove();
+                if (data.reply) {
+                    addBubble(data.reply, 'agent');
+                    conversation.push({ role: 'assistant', content: data.reply });
+                } else {
+                    addBubble('El agente no ha podido generar una respuesta.', 'agent');
+                }
+
+                if (data.summary) {
+                    document.getElementById('summary-view').style.display = 'block';
+                    const summaryText = typeof data.summary === 'object' 
+                        ? JSON.stringify(data.summary, null, 2) 
+                        : data.summary;
+                    document.getElementById('summary-text').textContent = summaryText;
+                }
+            } catch (e) {
+                loadingBubble.textContent = 'Error: ' + e.message;
+                console.error(e);
+            }
+        }
+
+        async function checkStatus() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/health`);
+                if (res.ok) {
+                    document.getElementById('status-dot').style.background = '#00ff00';
+                    document.getElementById('status-text').textContent = 'Conectado al Backend';
+                }
+            } catch (e) {
+                document.getElementById('status-dot').style.background = '#ff0000';
+                document.getElementById('status-text').textContent = 'Backend Offline (3001)';
+            }
+        }
+        checkStatus();
+
+        async function loadAgents() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/agents/whatsapp`);
+                const agents = await res.json();
+                const selector = document.getElementById('agent-selector');
+                agents.forEach(a => {
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.textContent = a.business_name;
+                    selector.appendChild(opt);
+                });
+            } catch (e) { console.error('Error loading agents:', e); }
+        }
+
+        function loadSelectedAgent() {
+            const selector = document.getElementById('agent-selector');
+            const name = selector.options[selector.selectedIndex].text;
+            document.getElementById('agent-name-header').textContent = name;
+            chatBox.innerHTML = `<div class="bubble agent">Hola! Soy el asistente de <b>${name}</b>. ¿En qué puedo ayudarte hoy? ✂️</div>`;
+            conversation = [];
+            document.getElementById('summary-view').style.display = 'none';
+        }
+
+        loadAgents();
+
+        function addBubble(text, type) {
+            const b = document.createElement('div');
+            b.className = `bubble ${type}`;
+            b.innerHTML = text.replace(/\n/g, '<br>');
+            chatBox.appendChild(b);
+            chatBox.scrollTop = chatBox.scrollHeight;
+            return b;
+        }
+    </script>
+</body>
+</html>

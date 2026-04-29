@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OFA | Voice Agent Builder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8fafc; --white: #ffffff; --charcoal: #1e293b; --slate: #64748b;
+            --teal: #38bdf8; --border: #f1f5f9; --accent: #6366f1; --prog: #818cf8;
+            --radius: 16px;
+        }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--charcoal); padding: 2rem; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
+        .card { background: var(--white); padding: 2.5rem; border-radius: var(--radius); border: 1px solid var(--border); box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .form-group { margin-bottom: 1.5rem; }
+        .form-label { display: block; font-size: 0.85rem; font-weight: 600; color: var(--slate); margin-bottom: 8px; }
+        .form-input { 
+            width: 100%; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border); 
+            background: #fdfdfd; font-family: inherit; font-size: 0.9rem; outline: none; transition: 0.2s;
+        }
+        .form-input:focus { border-color: var(--teal); box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1); }
+        .btn-save { 
+            background: linear-gradient(135deg, var(--accent), var(--prog)); color: white; border: none; 
+            padding: 14px 28px; border-radius: 12px; font-weight: 700; cursor: pointer; transition: 0.3s;
+        }
+        .btn-save:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -5px rgba(99, 102, 241, 0.4); }
+        .btn-back { color: var(--slate); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+        .badge-alpha { background: #fef3c7; color: #d97706; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div>
+                <a href="index.html#factory" class="btn-back">← Volver a App Factory</a>
+                <h1 style="margin-top:10px;">🗣️ OFA Voice Agent <span class="badge-alpha">ALPHA</span></h1>
+                <p style="color:var(--slate); font-size:0.9rem;">Constructor de agentes de voz para atender llamadas y enviar resúmenes.</p>
+            </div>
+            <button onclick="saveVoiceAgent()" class="btn-save">Guardar Agente de Voz</button>
+        </div>
+
+        <div class="card">
+            <div class="form-grid">
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Nombre del Negocio</label>
+                    <input type="text" id="v-biz-name" class="form-input" placeholder="Ej: Fontanería Martínez">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Teléfono de Voz (Agente)</label>
+                    <input type="text" id="v-phone" class="form-input" placeholder="34600112233">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Notificar Resumen a (WhatsApp Dueño)</label>
+                    <input type="text" id="v-owner" class="form-input" placeholder="34600112233">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Mensaje de Saludo Inicial</label>
+                    <input type="text" id="v-greeting" class="form-input" placeholder="Hola, soy el asistente de Fontanería Martínez, ¿en qué puedo ayudarle?">
+                </div>
+                <div class="form-group" style="grid-column: span 2;">
+                    <label class="form-label">Script de Preguntas / Prompt de Sistema</label>
+                    <textarea id="v-prompt" class="form-input" style="height:150px; resize:none;" placeholder="Instrucciones para el agente: preguntar por la urgencia, captar dirección, etc."></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Idioma</label>
+                    <select id="v-lang" class="form-input">
+                        <option value="es">Castellano</option>
+                        <option value="ca">Catalán</option>
+                        <option value="en">Inglés</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Proveedor de Voz</label>
+                    <select id="v-provider" class="form-input">
+                        <option value="retell">Retell AI (Recomendado)</option>
+                        <option value="base44">Base44</option>
+                    </select>
+                </div>
+            </div>
+            <div id="v-status" style="margin-top:20px; text-align:center; font-weight:600; display:none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const BACKEND_URL = 'http://localhost:3001';
+
+        async function saveVoiceAgent() {
+            const status = document.getElementById('v-status');
+            status.style.display = 'block';
+            status.textContent = '⌛ Guardando en Supabase...';
+            status.style.color = 'var(--slate)';
+
+            const payload = {
+                business_name: document.getElementById('v-biz-name').value,
+                phone_number: document.getElementById('v-phone').value,
+                owner_notification_number: document.getElementById('v-owner').value,
+                greeting_message: document.getElementById('v-greeting').value,
+                system_prompt: document.getElementById('v-prompt').value,
+                language: document.getElementById('v-lang').value,
+                voice_provider: document.getElementById('v-provider').value
+            };
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/agents/voice`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    status.textContent = '✅ Agente de Voz guardado. Ya puedes configurar el número en Retell.';
+                    status.style.color = 'var(--teal)';
+                } else {
+                    status.textContent = '❌ Error: ' + (data.error || 'No se pudo guardar');
+                    status.style.color = '#ef4444';
+                }
+            } catch (e) {
+                status.textContent = '❌ Error de conexión con el backend.';
+                status.style.color = '#ef4444';
+            }
+        }
+    </script>
+</body>
+</html>
