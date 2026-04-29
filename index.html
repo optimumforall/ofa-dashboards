@@ -762,10 +762,15 @@
             setTimeout(() => addLogEntry('Security Layer: Verified', 'SEC'), 2000);
         }
 
+        const BACKEND_URL = 'https://api.optimumforall.com';
+        const API_KEY = '8f5263437dee0c97473f2cf583f69cd429595a2f7850e886ebc7b3131ec0e38e';
+        const fetchOpts = { headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' } };
+
         async function fetchData() {
-            if(!supabase) return;
             try {
-                const { data: leads } = await supabase.from('leads').select('*').order('created_at', { ascending: false });
+                const resLeads = await fetch(`${BACKEND_URL}/api/crm/leads`, fetchOpts);
+                const { leads } = await resLeads.json();
+                
                 if(leads) {
                     document.getElementById('g-leads-total').textContent = leads.length;
                     const eliaCount = leads.filter(l => l.source === 'Elia Web Widget').length;
@@ -777,7 +782,8 @@
                     document.getElementById('g-leads-7d').textContent = newLeads;
 
                     // Fetch pending sales tasks count for today KPI
-                    const { data: todayTasks } = await supabase.from('tasks').select('id').eq('context', 'sales').eq('status', 'pending');
+                    const resTasks = await fetch(`${BACKEND_URL}/api/tasks?context=sales&status=pending`, fetchOpts);
+                    const { tasks: todayTasks } = await resTasks.json();
                     document.getElementById('g-tasks-today').textContent = todayTasks ? todayTasks.length : 0;
 
                     // Home Table
@@ -831,10 +837,14 @@
         }
 
         async function updateLeadStatus(id, newStatus) {
-            if(!supabase) return;
             try {
-                const { error } = await supabase.from('leads').update({ status: newStatus, updated_at: new Date().toISOString() }).eq('id', id);
-                if (error) throw error;
+                const res = await fetch(`${BACKEND_URL}/api/crm/leads/${id}`, {
+                    method: 'PATCH',
+                    headers: fetchOpts.headers,
+                    body: JSON.stringify({ status: newStatus })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
                 addLogEntry(`Lead ${id.slice(0,5)} updated to ${newStatus}`, 'DB');
                 fetchData(); // Refresh UI
             } catch(e) {
@@ -844,12 +854,11 @@
         }
 
         async function fetchSecurityData() {
-            if (!supabase) return;
             try {
                 // Fetch summary for mini-panel
-                const { data: alertsData } = await supabase.from('security_alerts').select('*').eq('tenant_id', 'OFA').eq('resolved', false).order('created_at', { ascending: false });
+                const resAlerts = await fetch(`${BACKEND_URL}/api/security/alerts`, fetchOpts);
+                const { alerts } = await resAlerts.json();
                 
-                const alerts = alertsData || [];
                 const criticals = alerts.filter(a => a.severity === 'critical').length;
                 const warnings = alerts.filter(a => a.severity === 'warning').length;
                 
@@ -891,8 +900,8 @@
                 }
 
                 // Fetch latest status checks
-                const { data: statusData } = await supabase.from('security_status').select('*').eq('tenant_id', 'OFA').order('checked_at', { ascending: false });
-                const checks = statusData || [];
+                const resStatus = await fetch(`${BACKEND_URL}/api/security/status`, fetchOpts);
+                const { status: checks } = await resStatus.json();
                 
                 // Keep only latest per component
                 const seen = new Set();
@@ -948,9 +957,13 @@
         }
 
         async function resolveSecurityAlert(id) {
-            if (!supabase) return;
             try {
-                await supabase.from('security_alerts').update({ resolved: true, resolved_at: new Date().toISOString() }).eq('id', id);
+                const res = await fetch(`${BACKEND_URL}/api/security/alerts/${id}/resolve`, {
+                    method: 'POST',
+                    headers: fetchOpts.headers
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
                 fetchSecurityData();
             } catch (e) {
                 console.error("Error resolving alert:", e);
@@ -961,16 +974,19 @@
         async function registrarIncidenteManual() {
             const desc = prompt("Describe brevemente el incidente o hallazgo de seguridad:");
             if (!desc) return;
-            if (!supabase) return;
             try {
-                await supabase.from('security_alerts').insert({
-                    tenant_id: 'OFA',
-                    severity: 'warning',
-                    source: 'manual',
-                    title: 'Incidente reportado manualmente',
-                    description: desc,
-                    resolved: false
+                const res = await fetch(`${BACKEND_URL}/api/security/alerts`, {
+                    method: 'POST',
+                    headers: fetchOpts.headers,
+                    body: JSON.stringify({
+                        severity: 'warning',
+                        source: 'manual',
+                        title: 'Incidente reportado manualmente',
+                        description: desc
+                    })
                 });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
                 fetchSecurityData();
                 alert("Incidente registrado y visible en alertas.");
             } catch (e) {
