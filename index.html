@@ -173,6 +173,7 @@
             <button class="nav-btn" data-mod="legal" onclick="switchModule('legal', this)"><span>⚖️</span><span data-i18n="nav-legal">Legal & Docs</span></button>
             <button class="nav-btn" data-mod="finance" onclick="switchModule('finance', this)"><span>💰</span><span data-i18n="nav-finance">Finanzas</span></button>
             <button class="nav-btn" data-mod="ops" onclick="switchModule('ops', this)"><span>🛠️</span><span data-i18n="nav-ops">Ops & Bóveda</span></button>
+            <button class="nav-btn" data-mod="agents" onclick="switchModule('agents', this)"><span>🤖</span><span>Agentes OFA</span></button>
             <button class="nav-btn" data-mod="security" onclick="switchModule('security', this)"><span>🔒</span><span data-i18n="nav-security">Seguridad</span></button>
             <button class="nav-btn" data-mod="settings" onclick="switchModule('settings', this)"><span>⚙️</span><span data-i18n="nav-settings">Configuración</span></button>
         </nav>
@@ -709,6 +710,37 @@
                 </div>
             </div>
         </section>
+
+        <!-- AGENTES OFA -->
+        <section id="module-agents" class="module">
+            <div class="grid-2">
+                <div class="card" style="grid-column: span 2; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white;">
+                    <h2 style="font-family: var(--font-head); font-weight: 700;">Consola de Agentes Inteligentes</h2>
+                    <p style="opacity: 0.8; font-size: 0.9rem; margin-top: 5px;">Interactúa con los cerebros de OFA de forma manual pegando contexto.</p>
+                </div>
+                
+                <div class="card">
+                    <div class="card-header">🤝 OFA-TONY (Ventas & CRM)</div>
+                    <textarea id="ctx-tony" placeholder="Pega aquí los leads o transcripción de llamada..." style="width:100%; height:150px; border-radius:8px; border:1px solid var(--border); padding:12px; font-family:var(--font-body); font-size:0.85rem; margin-bottom:15px;"></textarea>
+                    <button onclick="askAgent('ofa_tony', 'ctx-tony', 'res-tony')" id="btn-tony" class="badge" style="background:var(--ofa-teal); color:white; border:none; padding:10px 20px; width:100%; cursor:pointer; font-weight:700;">Preguntar a Tony</button>
+                    <div id="res-tony" class="card" style="margin-top:15px; display:none; background:#f1f5f9; border:none; font-size:0.85rem; line-height:1.5; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">🚀 OFA-NICK (Operaciones)</div>
+                    <textarea id="ctx-nick" placeholder="Pega tus tareas de hoy y logs de ayer..." style="width:100%; height:150px; border-radius:8px; border:1px solid var(--border); padding:12px; font-family:var(--font-body); font-size:0.85rem; margin-bottom:15px;"></textarea>
+                    <button onclick="askAgent('ofa_nick', 'ctx-nick', 'res-nick')" id="btn-nick" class="badge" style="background:var(--status-prog); color:white; border:none; padding:10px 20px; width:100%; cursor:pointer; font-weight:700;">Preguntar a Nick</button>
+                    <div id="res-nick" class="card" style="margin-top:15px; display:none; background:#f1f5f9; border:none; font-size:0.85rem; line-height:1.5; max-height: 400px; overflow-y: auto;"></div>
+                </div>
+
+                <div class="card" style="grid-column: span 2;">
+                    <div class="card-header">🧠 JARVIS-Mireia (Estrategia CEO)</div>
+                    <textarea id="ctx-jarvis" placeholder="Pega tu lista de ideas, proyectos o dilemas estratégicos..." style="width:100%; height:100px; border-radius:8px; border:1px solid var(--border); padding:12px; font-family:var(--font-body); font-size:0.85rem; margin-bottom:15px;"></textarea>
+                    <button onclick="askAgent('jarvis_mireia', 'ctx-jarvis', 'res-jarvis')" id="btn-jarvis" class="badge" style="background:#0f172a; color:white; border:none; padding:10px 20px; width:100%; cursor:pointer; font-weight:700;">Consultar a Jarvis</button>
+                    <div id="res-jarvis" class="card" style="margin-top:15px; display:none; background:#f8fafc; border:1px dashed var(--ofa-teal); font-size:0.85rem; line-height:1.5;"></div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <script>
@@ -770,6 +802,42 @@
         const BACKEND_URL = 'https://api.optimumforall.es';
         const API_KEY = '8f5263437dee0c97473f2cf583f69cd429595a2f7850e886ebc7b3131ec0e38e';
         const fetchOpts = { headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' } };
+
+        // ---- AGENTS API LOGIC ----
+        async function askAgent(slug, inputId, resId) {
+            const context = document.getElementById(inputId).value;
+            const resDiv = document.getElementById(resId);
+            const btn = document.querySelector(`button[onclick*="${slug}"]`);
+
+            if (!context) { alert("Por favor, pega algún contexto para el agente."); return; }
+
+            btn.disabled = true;
+            btn.textContent = "Procesando con Claude...";
+            resDiv.style.display = "block";
+            resDiv.innerHTML = "<em>El agente está analizando la información...</em>";
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/agents/${slug}/chat`, {
+                    method: 'POST',
+                    ...fetchOpts,
+                    body: JSON.stringify({ context })
+                });
+                const result = await res.json();
+                
+                if (result.success) {
+                    // Convertir saltos de línea y bullets básicos para visualización
+                    const formatted = result.response.replace(/\n/g, '<br>').replace(/•/g, '●').replace(/-/g, '○');
+                    resDiv.innerHTML = `<div style="padding:10px;">${formatted}</div>`;
+                } else {
+                    resDiv.innerHTML = `<div style="color:red; padding:10px;">Error: ${result.error}</div>`;
+                }
+            } catch (err) {
+                resDiv.innerHTML = `<div style="color:red; padding:10px;">Error de conexión con el Agente.</div>`;
+            } finally {
+                btn.disabled = false;
+                btn.textContent = slug === 'jarvis_mireia' ? 'Consultar a Jarvis' : (slug === 'ofa_tony' ? 'Preguntar a Tony' : 'Preguntar a Nick');
+            }
+        }
 
         async function fetchInboxSummary() {
             try {
