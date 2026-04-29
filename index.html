@@ -705,7 +705,7 @@
     </main>
 
     <script>
-        let supabase = null;
+        // Backend API now handles all data. No direct Supabase client.
         async function init() {
             try {
                 // Handling hash for direct module access (e.g. #ops)
@@ -738,15 +738,11 @@
                 updateUI();
                 addLogEntry('System Initializing...', 'INIT');
 
-                const url = 'https://pzjdruihfqtflugypcgl.supabase.co';
-                const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
-                supabase = window.supabase.createClient(url, key);
-                
                 document.getElementById('status-supabase').textContent = 'ONLINE';
                 document.getElementById('status-supabase').style.background = '#dcfce7';
                 document.getElementById('status-supabase').style.color = '#166534';
                 
-                addLogEntry('Supabase Connection established', 'DB');
+                addLogEntry('API Connection initialized', 'DB');
                 fetchData();
                 fetchSecurityData();
             } catch(e) {
