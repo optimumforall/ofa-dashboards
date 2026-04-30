@@ -199,7 +199,7 @@
             const total = document.querySelectorAll('.task-check:not(.done)').length;
             document.getElementById('tasks-pending').textContent = total;
         }
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             const savedTheme = localStorage.getItem('ofa_theme') || 'light';
             document.documentElement.setAttribute('data-theme', savedTheme);
             const themeIcon = document.getElementById('theme-icon');
@@ -208,9 +208,36 @@
             const d = new Date();
             document.getElementById('top-date').textContent = d.toLocaleDateString('es-ES', { weekday:'long', day:'numeric', month:'long' }).toUpperCase();
             setLang(lang);
-            updatePending();
+
             const saved = localStorage.getItem('jorge_notes');
             if (saved) document.getElementById('ops-notes').value = saved;
+
+            // Initialize Supabase and Fetch Tasks
+            const SUPA_URL = 'https://pzjdruihfqtflugypcgl.supabase.co';
+            const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
+            
+            if (window.supabase) {
+                const supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+                const { data: tasks } = await supa.from('tasks')
+                    .select('*')
+                    .eq('context', 'tech')
+                    .eq('status', 'in_progress')
+                    .order('created_at', { ascending: false });
+
+                if (tasks && tasks.length > 0) {
+                    const list = document.getElementById('task-list');
+                    list.innerHTML = tasks.map(t => `
+                        <div class="task-item">
+                            <div class="task-check" onclick="toggleTask(this)"></div>
+                            <div>
+                                <div class="task-text">${t.title}</div>
+                                <span class="task-tag" style="background:rgba(56,189,248,0.12); color:#0284c7;">${t.priority || 'FASE 1'}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+                updatePending();
+            }
         });
 
         function toggleTheme() {

@@ -499,11 +499,11 @@
         const SUPA_URL = 'https://pzjdruihfqtflugypcgl.supabase.co';
         const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
         
-        // Dynamic BACKEND_URL: Use production by default, but localhost if on localhost
-        // Auto-detect backend: Production if on os.optimumforall.tech, otherwise localhost
-        const BACKEND_URL = (window.location.hostname === 'os.optimumforall.tech') 
-            ? 'https://api.optimumforall.com' 
+        const BACKEND_URL = (window.location.hostname === 'os.optimumforall.es') 
+            ? 'https://api.optimumforall.es' 
             : 'http://localhost:3001';
+        const API_KEY = '8f5263437dee0c97473f2cf583f69cd429595a2f7850e886ebc7b3131ec0e38e';
+        const fetchOpts = { headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' } };
         
         let supa = null;
         let funnelChart = null;
@@ -646,7 +646,7 @@
             status.textContent = 'Conectando con Apify...';
 
             try {
-                const res = await fetch(`${BACKEND_URL}/api/crm/sync-apify`, { method: 'POST' });
+                const res = await fetch(`${BACKEND_URL}/api/crm/sync-apify`, { method: 'POST', ...fetchOpts });
                 const data = await res.json();
                 
                 if (data.success) {
@@ -839,7 +839,7 @@
             try {
                 const res = await fetch(`${BACKEND_URL}/api/crm/upsert-lead`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    ...fetchOpts,
                     body: JSON.stringify(payload)
                 });
                 if (res.ok) {
@@ -854,7 +854,7 @@
             try {
                 await fetch(`${BACKEND_URL}/api/crm/upsert-lead`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    ...fetchOpts,
                     body: JSON.stringify({ email, name, status })
                 });
                 fetchLeads(); fetchTasks();
@@ -884,7 +884,7 @@
             try {
                 await fetch(`${BACKEND_URL}/api/tasks/update`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    ...fetchOpts,
                     body: JSON.stringify({ task_id: id, status: 'done' })
                 });
                 // Slack/n8n notify logic here if needed
@@ -915,7 +915,7 @@
             try {
                 const res = await fetch(`${BACKEND_URL}/api/crm/generate-outreach`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    ...fetchOpts,
                     body: JSON.stringify({ name, segment, city, status })
                 });
                 const data = await res.json();
