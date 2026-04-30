@@ -79,13 +79,13 @@
             es: {
                 'nav-home': 'Vista General', 'nav-sales': 'Ventas CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finanzas', 'nav-clients': 'Clientes',
-                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-security': 'Seguridad',
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-agents': 'Agentes OFA', 'nav-security': 'Seguridad',
                 'nav-radar': '📡 Radar de Costes', 'nav-settings': 'Configuración'
             },
             en: {
                 'nav-home': 'Overview', 'nav-sales': 'Sales CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finance', 'nav-clients': 'Clients',
-                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-security': 'Security',
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-agents': 'OFA Agents', 'nav-security': 'Security',
                 'nav-radar': '📡 Cost Radar', 'nav-settings': 'Settings'
             }
         };
@@ -175,7 +175,7 @@
             <button class="nav-btn" data-mod="legal" onclick="switchModule('legal', this)"><span>⚖️</span><span data-i18n="nav-legal">Legal & Docs</span></button>
             <button class="nav-btn" data-mod="finance" onclick="switchModule('finance', this)"><span>💰</span><span data-i18n="nav-finance">Finanzas</span></button>
             <button class="nav-btn" data-mod="ops" onclick="switchModule('ops', this)"><span>🛠️</span><span data-i18n="nav-ops">Ops & Bóveda</span></button>
-            <button class="nav-btn" data-mod="agents" onclick="switchModule('agents', this)"><span>🤖</span><span>Agentes OFA</span></button>
+            <button class="nav-btn" data-mod="agents" onclick="switchModule('agents', this)"><span>🤖</span><span data-i18n="nav-agents">Agentes OFA</span></button>
             <button class="nav-btn" data-mod="security" onclick="switchModule('security', this)"><span>🔒</span><span data-i18n="nav-security">Seguridad</span></button>
             <button class="nav-btn" data-mod="radar" onclick="switchModule('radar', this); fetchUsageSummary();"><span>📡</span><span data-i18n="nav-radar">Radar de Costes</span></button>
             <button class="nav-btn" data-mod="settings" onclick="switchModule('settings', this)"><span>⚙️</span><span data-i18n="nav-settings">Configuración</span></button>
@@ -469,14 +469,40 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="card">
-                    <div class="card-header">🚀 Redes Sociales (Noa Voice)</div>
-                    <table style="width:100%;">
-                        <tbody>
-                            <tr><td>Instagram Noa</td><td style="text-align:right;"><span class="badge" style="background:#dcfce7; color:#166534;">NEW</span></td><td style="text-align:right;"><a href="https://www.instagram.com/noa_voice_ai" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
-                            <tr><td>Facebook Noa</td><td style="text-align:right;"><span class="badge" style="background:#f1f5f9; color:#475569;">SETUP</span></td><td style="text-align:right;"><a href="https://www.facebook.com/noa.voice" target="_blank" style="color:var(--ofa-teal); text-decoration:none; font-size:0.75rem; font-weight:600;">Open ↗</a></td></tr>
-                        </tbody>
-                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- AGENTES OFA -->
+        <section id="module-agents" class="module">
+            <div class="grid-3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1.5rem; margin-bottom:1.5rem;">
+                <div class="card" style="border-top:4px solid #38bdf8;">
+                    <div style="font-size:2rem; margin-bottom:10px;">💼</div>
+                    <div class="card-header">OFA-TONY</div>
+                    <p style="font-size:0.8rem; color:var(--slate); min-height:40px;">Ventas & Cierre. Evalúa la vista TONY - Ventas de Airtable.</p>
+                    <button onclick="runAgentTasks('tony')" id="btn-agent-tony" class="badge" style="background:#38bdf8; color:white; border:none; cursor:pointer; width:100%; padding:10px; margin-top:10px;">Evaluar Tareas Airtable</button>
+                </div>
+                <div class="card" style="border-top:4px solid #f472b6;">
+                    <div style="font-size:2rem; margin-bottom:10px;">🛠️</div>
+                    <div class="card-header">OFA-NICK</div>
+                    <p style="font-size:0.8rem; color:var(--slate); min-height:40px;">Ops & Estabilidad. Evalúa la vista NICK - Ops & Tech.</p>
+                    <button onclick="runAgentTasks('nick')" id="btn-agent-nick" class="badge" style="background:#f472b6; color:white; border:none; cursor:pointer; width:100%; padding:10px; margin-top:10px;">Evaluar Tareas Airtable</button>
+                </div>
+                <div class="card" style="border-top:4px solid #a78bfa;">
+                    <div style="font-size:2rem; margin-bottom:10px;">🧠</div>
+                    <div class="card-header">JARVIS-Mireia</div>
+                    <p style="font-size:0.8rem; color:var(--slate); min-height:40px;">Estrategia & Foco. Evalúa la vista Mireia - Foco.</p>
+                    <button onclick="runAgentTasks('mireia')" id="btn-agent-mireia" class="badge" style="background:#a78bfa; color:white; border:none; cursor:pointer; width:100%; padding:10px; margin-top:10px;">Evaluar Tareas Airtable</button>
+                </div>
+            </div>
+
+            <div class="card" id="agent-response-card" style="display:none; border-left:4px solid var(--ofa-teal);">
+                <div class="card-header" style="display:flex; justify-content:space-between;">
+                    <span>🤖 Respuesta del Agente: <strong id="agent-name-display">--</strong></span>
+                    <span id="agent-source-badge" class="badge" style="background:var(--border); color:var(--slate);">Airtable Sync</span>
+                </div>
+                <div id="agent-response-content" style="font-size:0.9rem; line-height:1.6; white-space:pre-wrap; padding:10px; background:var(--bg-master); border-radius:10px; border:1px solid var(--border);">
+                    Analizando tareas...
                 </div>
             </div>
         </section>
@@ -1548,6 +1574,38 @@
                 alert("Incidente registrado y visible en alertas.");
             } catch (e) {
                 console.error("Error logging manual incident:", e);
+            }
+        }
+
+        async function runAgentTasks(slug) {
+            const card = document.getElementById('agent-response-card');
+            const content = document.getElementById('agent-response-content');
+            const nameDisp = document.getElementById('agent-name-display');
+            const sourceBadge = document.getElementById('agent-source-badge');
+            
+            card.style.display = 'block';
+            content.textContent = 'Contactando con el agente y leyendo Airtable...';
+            nameDisp.textContent = slug.toUpperCase();
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/agents/${slug}/tasks`, {
+                    method: 'POST',
+                    headers: fetchOpts.headers,
+                    body: JSON.stringify({ context: "Revisa mi lista de hoy y dame el plan de acción." })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    content.textContent = data.response;
+                    sourceBadge.textContent = data.source === 'airtable_direct' ? 'Airtable Live' : 'Payload Manual';
+                    sourceBadge.style.background = data.source === 'airtable_direct' ? 'var(--status-prog)' : 'var(--border)';
+                    sourceBadge.style.color = data.source === 'airtable_direct' ? 'white' : 'var(--slate)';
+                } else {
+                    content.textContent = "Error: " + (data.error || "No se pudo obtener respuesta del agente.");
+                }
+            } catch (err) {
+                console.error("Agent Error:", err);
+                content.textContent = "Error de conexión con el backend.";
             }
         }
 
