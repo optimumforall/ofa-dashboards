@@ -79,12 +79,14 @@
             es: {
                 'nav-home': 'Vista General', 'nav-sales': 'Ventas CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finanzas', 'nav-clients': 'Clientes',
-                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-security': 'Seguridad', 'nav-settings': 'Configuración'
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-security': 'Seguridad',
+                'nav-radar': '📡 Radar de Costes', 'nav-settings': 'Configuración'
             },
             en: {
                 'nav-home': 'Overview', 'nav-sales': 'Sales CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finance', 'nav-clients': 'Clients',
-                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-security': 'Security', 'nav-settings': 'Settings'
+                'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-security': 'Security',
+                'nav-radar': '📡 Cost Radar', 'nav-settings': 'Settings'
             }
         };
 
@@ -175,6 +177,7 @@
             <button class="nav-btn" data-mod="ops" onclick="switchModule('ops', this)"><span>🛠️</span><span data-i18n="nav-ops">Ops & Bóveda</span></button>
             <button class="nav-btn" data-mod="agents" onclick="switchModule('agents', this)"><span>🤖</span><span>Agentes OFA</span></button>
             <button class="nav-btn" data-mod="security" onclick="switchModule('security', this)"><span>🔒</span><span data-i18n="nav-security">Seguridad</span></button>
+            <button class="nav-btn" data-mod="radar" onclick="switchModule('radar', this); fetchUsageSummary();"><span>📡</span><span data-i18n="nav-radar">Radar de Costes</span></button>
             <button class="nav-btn" data-mod="settings" onclick="switchModule('settings', this)"><span>⚙️</span><span data-i18n="nav-settings">Configuración</span></button>
         </nav>
         
@@ -676,6 +679,179 @@
                     </div>
                 </div>
             </div>
+            </div>
+
+            <!-- SALUD DEL ECOSISTEMA (Vercel + GSC) -->
+            <div style="margin-top: 40px; margin-bottom: 20px;">
+                <h2 style="font-size: 1.2rem; font-family: var(--font-head); font-weight: 600;">Salud del Ecosistema & SEO</h2>
+                <p style="font-size: 0.8rem; color: var(--slate);">Métricas combinadas de Vercel Analytics y Google Search Console.</p>
+            </div>
+
+            <div class="card" id="eco-insights" style="background: linear-gradient(to right, #f8fafc, #eff6ff); border-left: 4px solid var(--ofa-teal);">
+                <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 10px;">🧠 Insights de Estrategia (Claude AI)</div>
+                <div id="eco-ai-content" style="font-size: 0.85rem; line-height: 1.6; color: var(--charcoal);">Analizando datos del ecosistema...</div>
+            </div>
+
+            <div class="grid-2">
+                <!-- Bloque A: Salud Técnica -->
+                <div class="card">
+                    <div class="card-header">📊 Estado Técnico (Vercel)</div>
+                    <div class="grid-2" style="gap: 10px;">
+                        <div style="padding: 15px; background: var(--bg-master); border-radius: 10px; text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--slate); text-transform: uppercase;">Tráfico (7d)</div>
+                            <div id="eco-traffic" style="font-size: 1.5rem; font-weight: 700; margin-top: 5px;">--</div>
+                        </div>
+                        <div style="padding: 15px; background: var(--bg-master); border-radius: 10px; text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--slate); text-transform: uppercase;">Error Rate API</div>
+                            <div id="eco-errors" style="font-size: 1.5rem; font-weight: 700; margin-top: 5px; color: var(--status-prog);">0%</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px; font-size: 0.75rem;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom:5px;"><span>Core Web Vitals</span> <span id="eco-cwv" class="badge" style="background:#dcfce7; color:#166534;">EXCELENTE</span></div>
+                        <div style="display:flex; justify-content:space-between;"><span>Avg Response Time</span> <span id="eco-resp-time">-- ms</span></div>
+                    </div>
+                </div>
+
+                <!-- Bloque B: SEO & Tráfico Orgánico -->
+                <div class="card">
+                    <div class="card-header">🌍 SEO Hub (Search Console)</div>
+                    <div class="grid-2" style="gap: 10px;">
+                        <div style="padding: 15px; background: var(--bg-master); border-radius: 10px; text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--slate); text-transform: uppercase;">Clicks (28d)</div>
+                            <div id="eco-clicks" style="font-size: 1.5rem; font-weight: 700; margin-top: 5px;">--</div>
+                        </div>
+                        <div style="padding: 15px; background: var(--bg-master); border-radius: 10px; text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--slate); text-transform: uppercase;">Posición Media</div>
+                            <div id="eco-pos" style="font-size: 1.5rem; font-weight: 700; margin-top: 5px;">--</div>
+                        </div>
+                    </div>
+                    <div class="table-wrap" style="margin-top: 15px;">
+                        <table style="font-size: 0.7rem;">
+                            <thead><tr><th>Top Query</th><th>Clicks</th><th>CTR</th></tr></thead>
+                            <tbody id="eco-queries-tbody">
+                                <tr><td colspan="3" style="text-align:center;">Cargando SEO data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- RADAR DE COSTES -->
+        <section id="module-radar" class="module">
+            <style>
+                .radar-provider-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+                .radar-card { background: var(--bg-card); border-radius: var(--radius-lg); padding: 1.25rem; border: 1px solid var(--border); position: relative; overflow: hidden; transition: 0.2s; }
+                .radar-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,0.07); transform: translateY(-2px); }
+                .radar-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--ofa-teal), var(--status-prog)); }
+                .radar-provider-name { font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+                .radar-provider-cat { font-size: 0.7rem; color: var(--slate); text-transform: uppercase; margin-top: 2px; }
+                .radar-cost-big { font-size: 1.8rem; font-weight: 800; margin: 10px 0 4px; font-family: var(--font-head); }
+                .radar-cost-sub { font-size: 0.75rem; color: var(--slate); }
+                .radar-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 12px; }
+                .radar-bar-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--ofa-teal), var(--status-prog)); transition: width 0.6s ease; }
+            </style>
+
+            <!-- HEADER -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+                <div>
+                    <h2 style="font-size:1.3rem; font-weight:700;">📡 Radar de Costes & Uso del Stack</h2>
+                    <p style="font-size:0.8rem; color:var(--slate); margin-top:4px;">Seguimiento en tiempo real del gasto por proveedor de IA e infraestructura.</p>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div id="radar-month-label" style="font-size:0.8rem; color:var(--slate); font-weight:600;"></div>
+                    <button onclick="fetchUsageSummary()" class="badge" style="background:var(--ofa-teal); color:white; border:none; cursor:pointer; padding:8px 14px;">↻ Actualizar</button>
+                </div>
+            </div>
+
+            <!-- TOTAL KPI -->
+            <div class="grid-4" style="margin-bottom:1.5rem;">
+                <div class="card" style="border-left:4px solid var(--ofa-teal); grid-column:span 1;">
+                    <div class="kpi-title">Gasto Total Estimado (Mes)</div>
+                    <div class="kpi-val" id="radar-grand-total" style="color:var(--ofa-teal);">--</div>
+                    <div style="font-size:0.7rem; color:var(--slate); margin-top:4px;">Fijo + Variable IA</div>
+                </div>
+                <div class="card" style="border-left:4px solid var(--status-prog);">
+                    <div class="kpi-title">Coste Fijo Infraestructura</div>
+                    <div class="kpi-val" id="radar-fixed-total" style="color:var(--status-prog);">--</div>
+                    <div style="font-size:0.7rem; color:var(--slate); margin-top:4px;">Hosting, DB, CDN</div>
+                </div>
+                <div class="card" style="border-left:4px solid var(--status-warn);">
+                    <div class="kpi-title">Coste Variable IA (APIs)</div>
+                    <div class="kpi-val" id="radar-usage-total" style="color:var(--status-warn);">--</div>
+                    <div style="font-size:0.7rem; color:var(--slate); margin-top:4px;">Tokens consumidos</div>
+                </div>
+                <div class="card" style="border-left:4px solid #a78bfa;">
+                    <div class="kpi-title">Proveedores Activos</div>
+                    <div class="kpi-val" id="radar-providers-count" style="color:#a78bfa;">--</div>
+                    <div style="font-size:0.7rem; color:var(--slate); margin-top:4px;">Del total registrados</div>
+                </div>
+            </div>
+
+            <!-- PROVIDER CARDS -->
+            <div id="radar-provider-grid" class="radar-provider-grid">
+                <!-- Filled by JS -->
+                <div style="grid-column:span 3; text-align:center; padding:40px; color:var(--slate);">Cargando proveedores...</div>
+            </div>
+
+            <!-- DESGLOSE TABLE -->
+            <div class="card">
+                <div class="card-header">
+                    <span>Desglose Completo por Proveedor</span>
+                    <span id="radar-table-month" style="font-size:0.75rem; color:var(--slate); font-weight:400;"></span>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Proveedor</th>
+                                <th>Categoría</th>
+                                <th>Tipo Billing</th>
+                                <th style="text-align:right;">Fijo/mes</th>
+                                <th style="text-align:right;">Variable (IA)</th>
+                                <th style="text-align:right;">Llamadas API</th>
+                                <th style="text-align:right;">Total Estimado</th>
+                            </tr>
+                        </thead>
+                        <tbody id="radar-breakdown-tbody">
+                            <tr><td colspan="7" style="text-align:center; padding:20px; color:var(--slate);">Cargando datos...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- LOGS DE USO -->
+            <div class="card" style="margin-top:1.5rem;">
+                <div class="card-header">Últimas Llamadas API Registradas</div>
+                <div class="table-wrap">
+                    <table style="font-size:0.8rem;">
+                        <thead>
+                            <tr><th>Proveedor</th><th>Modelo</th><th>Tokens Input</th><th>Tokens Output</th><th style="text-align:right;">Coste Est.</th><th>Fecha</th></tr>
+                        </thead>
+                        <tbody id="radar-logs-tbody">
+                            <tr><td colspan="6" style="text-align:center; padding:20px; color:var(--slate);">Sin logs todavía</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- STATIC SAAS COSTS (known fixed costs not yet in DB) -->
+            <div class="card" style="margin-top:1.5rem; background:linear-gradient(to right, #f8fafc, #eff6ff);">
+                <div class="card-header">💰 Costes SaaS Manuales Confirmados</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Herramienta</th><th>Uso</th><th style="text-align:right;">€/mes</th><th>Estado</th></tr></thead>
+                        <tbody>
+                            <tr><td><strong>Hostinger VPS</strong></td><td>Backend + n8n</td><td style="text-align:right;">~7 €</td><td><span class="badge" style="background:#dcfce7; color:#166534;">ACTIVO</span></td></tr>
+                            <tr><td><strong>ManyChat</strong></td><td>Marketing automation</td><td style="text-align:right;">12 €</td><td><span class="badge" style="background:#dcfce7; color:#166534;">ACTIVO</span></td></tr>
+                            <tr><td><strong>Skool Academy</strong></td><td>Formación IA</td><td style="text-align:right;">64 €</td><td><span class="badge" style="background:#fef9c3; color:#854d0e;">REVISAR</span></td></tr>
+                            <tr><td><strong>AI Blueprint Plus</strong></td><td>Formación IA</td><td style="text-align:right;">21 €</td><td><span class="badge" style="background:#fef9c3; color:#854d0e;">REVISAR</span></td></tr>
+                            <tr><td><strong>Claude / OpenAI (APIs)</strong></td><td>Core LLMs</td><td style="text-align:right;">~25 €</td><td><span class="badge" style="background:#e0f2fe; color:#0ea5e9;">VARIABLE</span></td></tr>
+                            <tr style="border-top:2px solid var(--border);"><td><strong>Total Actual</strong></td><td></td><td style="text-align:right;"><strong style="color:var(--status-warn);">~129 €</strong></td><td></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </section>
 
         <!-- SETTINGS -->
@@ -785,6 +961,7 @@
                 fetchData();
                 fetchSecurityData();
                 fetchInboxSummary();
+                fetchEcosystemData();
             } catch(e) {
                 console.error("Init Error:", e);
                 addLogEntry('System init failure', 'ERR');
@@ -794,6 +971,7 @@
                 fetchData();
                 fetchSecurityData();
                 fetchInboxSummary();
+                fetchEcosystemData();
             }, 60000);
             setTimeout(() => addLogEntry('Elia Widget: Monitoring active', 'WEB'), 1000);
             setTimeout(() => addLogEntry('Security Layer: Verified', 'SEC'), 2000);
@@ -837,6 +1015,104 @@
                 btn.disabled = false;
                 btn.textContent = slug === 'jarvis_mireia' ? 'Consultar a Jarvis' : (slug === 'ofa_tony' ? 'Preguntar a Tony' : 'Preguntar a Nick');
             }
+        }
+
+        async function fetchUsageSummary() {
+            try {
+                const [summaryRes, logsRes] = await Promise.all([
+                    fetch(`${BACKEND_URL}/api/usage/summary`, fetchOpts),
+                    fetch(`${BACKEND_URL}/api/usage/logs`, fetchOpts)
+                ]);
+                const summaryData = await summaryRes.json();
+                const logsData = await logsRes.json();
+
+                if (summaryData.success) renderUsageSummary(summaryData);
+                if (logsData.success) renderUsageLogs(logsData.logs);
+            } catch (err) {
+                console.error('[Radar] Usage Fetch Error:', err);
+                document.getElementById('radar-provider-grid').innerHTML = `<div style="grid-column:span 3; text-align:center; padding:40px; color:var(--status-err);">⚠️ Error conectando con la API. El backend puede estar reiniciando.</div>`;
+            }
+        }
+
+        function renderUsageSummary(data) {
+            const { providers = [], grand_total, month } = data;
+
+            // Month label
+            const monthLabel = month ? `Mes: ${month}` : '';
+            const ml = document.getElementById('radar-month-label');
+            const tl = document.getElementById('radar-table-month');
+            if (ml) ml.textContent = monthLabel;
+            if (tl) tl.textContent = monthLabel;
+
+            // Grand totals
+            const fixedTotal = providers.reduce((s, p) => s + (p.fixed_monthly || 0), 0);
+            const usageTotal = providers.reduce((s, p) => s + (p.usage_cost_month || 0), 0);
+            const activeCount = providers.filter(p => p.status === 'active').length;
+
+            document.getElementById('radar-grand-total').textContent = `$${parseFloat(grand_total).toFixed(2)}`;
+            document.getElementById('radar-fixed-total').textContent = `$${fixedTotal.toFixed(2)}`;
+            document.getElementById('radar-usage-total').textContent = `$${usageTotal.toFixed(4)}`;
+            document.getElementById('radar-providers-count').textContent = `${activeCount} / ${providers.length}`;
+
+            // Provider cards
+            const grid = document.getElementById('radar-provider-grid');
+            if (!providers.length) {
+                grid.innerHTML = `<div style="grid-column:span 3; text-align:center; padding:40px; color:var(--slate);">Sin proveedores registrados todavía. Ejecuta el SQL en Supabase.</div>`;
+                return;
+            }
+            const maxCost = Math.max(...providers.map(p => p.total_estimated), 1);
+            grid.innerHTML = providers.map(p => {
+                const barPct = Math.round((p.total_estimated / maxCost) * 100);
+                const costColor = p.total_estimated > 20 ? 'var(--status-err)' : p.total_estimated > 5 ? 'var(--status-warn)' : 'var(--ofa-teal)';
+                return `
+                <div class="radar-card">
+                    <div class="radar-provider-name">${p.icon || '📦'} ${p.name}</div>
+                    <div class="radar-provider-cat">${p.category || ''} · ${p.status}</div>
+                    <div class="radar-cost-big" style="color:${costColor};">$${p.total_estimated.toFixed(2)}</div>
+                    <div class="radar-cost-sub">
+                        ${p.fixed_monthly > 0 ? `Fijo: $${p.fixed_monthly} · ` : ''}
+                        ${p.usage_cost_month > 0 ? `API: $${p.usage_cost_month.toFixed(4)} · ${p.calls} llamadas` : 'Sin llamadas este mes'}
+                    </div>
+                    <div class="radar-bar-wrap">
+                        <div class="radar-bar-fill" style="width:${barPct}%; background: ${costColor};"></div>
+                    </div>
+                </div>`;
+            }).join('');
+
+            // Breakdown table
+            const tbody = document.getElementById('radar-breakdown-tbody');
+            tbody.innerHTML = providers.map(p => {
+                const billingBadge = p.fixed_monthly > 0 && p.usage_cost_month > 0 ? 'Mixto' : p.fixed_monthly > 0 ? 'Fijo' : 'Variable';
+                return `<tr>
+                    <td><strong>${p.icon || ''} ${p.name}</strong><br><a href="${p.website || '#'}" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal);">Web ↗</a></td>
+                    <td><span class="badge" style="background:#f1f5f9; color:var(--charcoal);">${p.category || '--'}</span></td>
+                    <td>${billingBadge}</td>
+                    <td style="text-align:right;">${p.fixed_monthly > 0 ? `$${p.fixed_monthly}` : '--'}</td>
+                    <td style="text-align:right;">${p.usage_cost_month > 0 ? `$${p.usage_cost_month.toFixed(4)}` : '--'}</td>
+                    <td style="text-align:right;">${p.calls > 0 ? p.calls : '--'}</td>
+                    <td style="text-align:right; font-weight:700;">$${p.total_estimated.toFixed(2)}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        function renderUsageLogs(logs) {
+            const tbody = document.getElementById('radar-logs-tbody');
+            if (!logs || !logs.length) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--slate);">Sin llamadas API registradas todavía.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = logs.slice(0, 20).map(log => {
+                const provName = log.stack_providers?.name || 'Desconocido';
+                const provIcon = log.stack_providers?.icon || '📦';
+                return `<tr>
+                    <td>${provIcon} ${provName}</td>
+                    <td><code style="font-size:0.75rem;">${log.model_name || '--'}</code></td>
+                    <td>${(log.tokens_input || 0).toLocaleString()}</td>
+                    <td>${(log.tokens_output || 0).toLocaleString()}</td>
+                    <td style="text-align:right; font-family:var(--font-mono);">$${parseFloat(log.cost_estimated || 0).toFixed(6)}</td>
+                    <td style="font-size:0.75rem; color:var(--slate);">${new Date(log.created_at).toLocaleString('es-ES')}</td>
+                </tr>`;
+            }).join('');
         }
 
         async function fetchInboxSummary() {
@@ -1079,6 +1355,56 @@
 
             } catch (e) {
                 console.error("Fetch Security Error:", e);
+            }
+        }
+
+        async function fetchEcosystemData() {
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/security/ecosystem`, fetchOpts);
+                const result = await res.json();
+                
+                if (result.success) {
+                    const { metrics, ai_insights } = result.data;
+                    
+                    // Render AI Insights
+                    document.getElementById('eco-ai-content').innerHTML = ai_insights.replace(/\n/g, '<br>');
+
+                    // Helper to find metric
+                    const getVal = (m) => metrics.find(x => x.metric === m);
+
+                    // Update UI (Technical)
+                    const traffic = getVal('traffic_7d');
+                    if (traffic) document.getElementById('eco-traffic').textContent = traffic.value.toLocaleString();
+                    
+                    const errors = getVal('api_error_rate_24h');
+                    if (errors) {
+                        const el = document.getElementById('eco-errors');
+                        el.textContent = errors.value + '%';
+                        el.style.color = errors.value > 5 ? 'var(--status-err)' : (errors.value > 1 ? 'var(--status-warn)' : 'var(--status-prog)');
+                    }
+
+                    // Update UI (SEO)
+                    const clicks = getVal('seo_clicks_28d');
+                    if (clicks) document.getElementById('eco-clicks').textContent = clicks.value;
+                    
+                    const pos = getVal('seo_avg_position_28d');
+                    if (pos) document.getElementById('eco-pos').textContent = pos.value;
+
+                    // Render Top Queries if available in details of some metric
+                    const topQueries = metrics.find(x => x.details && x.details.top_queries);
+                    if (topQueries) {
+                        const qTbody = document.getElementById('eco-queries-tbody');
+                        qTbody.innerHTML = topQueries.details.top_queries.slice(0, 5).map(q => `
+                            <tr>
+                                <td>${q.query}</td>
+                                <td>${q.clicks}</td>
+                                <td>${(q.ctr * 100).toFixed(1)}%</td>
+                            </tr>
+                        `).join('');
+                    }
+                }
+            } catch (e) {
+                console.error("Ecosystem Fetch Error:", e);
             }
         }
 
