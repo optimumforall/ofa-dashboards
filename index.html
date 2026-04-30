@@ -71,22 +71,45 @@
         .user-role { font-size: 0.7rem; color: var(--slate); display: block; }
         
         .badge-phase { background: #fee2e2; color: #ef4444; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+        
+        /* FUNNEL STYLES */
+        .funnel-container { display: flex; gap: 10px; margin-top: 15px; }
+        .funnel-step { flex: 1; background: var(--bg-master); padding: 15px; border-radius: 12px; text-align: center; border: 1px solid var(--border); transition: 0.2s; }
+        .funnel-step:hover { border-color: var(--ofa-teal); transform: translateY(-2px); }
+        .funnel-step .count { font-size: 1.5rem; font-weight: 700; display: block; }
+        .funnel-step .label { font-size: 0.7rem; color: var(--slate); text-transform: uppercase; font-weight: 600; }
+
+        /* ACTION BLOCK */
+        .action-card { display: flex; gap: 15px; align-items: flex-start; padding: 15px; background: var(--bg-card); border-radius: 16px; border-left: 5px solid var(--ofa-teal); margin-bottom: 10px; }
+        .action-icon { font-size: 1.8rem; background: var(--bg-master); width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; border-radius: 12px; }
+        .action-content { flex: 1; }
+        .action-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+        .action-text { font-size: 0.85rem; line-height: 1.4; color: var(--charcoal); }
+        .action-btns { display: flex; gap: 8px; margin-top: 10px; }
     </style>
 
     <script>
+        // --- BACKEND CONFIG ---
+        const IS_PROD = window.location.hostname.includes('optimumforall');
+        const BACKEND_URL = IS_PROD 
+            ? 'https://api.optimumforall.es' 
+            : 'http://localhost:3001';
+        const API_KEY = '8f5263437dee0c97473f2cf583f69cd429595a2f7850e886ebc7b3131ec0e38e';
+        const fetchOpts = { headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' } };
+
         let currentLang = localStorage.getItem('ofa_lang') || 'es';
         const translations = {
             es: {
                 'nav-home': 'Vista General', 'nav-sales': 'Ventas CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finanzas', 'nav-clients': 'Clientes',
                 'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Bóveda', 'nav-agents': 'Agentes OFA', 'nav-security': 'Seguridad',
-                'nav-radar': '📡 Radar de Costes', 'nav-settings': 'Configuración'
+                'nav-radar': 'Radar de Costes', 'nav-settings': 'Configuración'
             },
             en: {
                 'nav-home': 'Overview', 'nav-sales': 'Sales CRM', 'nav-factory': 'App Factory',
                 'nav-marketing': 'Marketing', 'nav-finance': 'Finance', 'nav-clients': 'Clients',
                 'nav-legal': 'Legal & Docs', 'nav-ops': 'Ops & Vault', 'nav-agents': 'OFA Agents', 'nav-security': 'Security',
-                'nav-radar': '📡 Cost Radar', 'nav-settings': 'Settings'
+                'nav-radar': 'Cost Radar', 'nav-settings': 'Settings'
             }
         };
 
@@ -213,6 +236,14 @@
 
         <!-- HOME -->
         <section id="module-home" class="module active">
+            <!-- 1.1 QUÉ HAGO AHORA -->
+            <div class="card" style="background: linear-gradient(135deg, rgba(56, 189, 248, 0.1) 0%, transparent 100%);">
+                <div class="card-header">🚀 ¿Qué hago ahora? (Central de Mando IA)</div>
+                <div id="home-actions-container">
+                    <div style="text-align:center; padding:20px; color:var(--slate);">Consultando con los agentes...</div>
+                </div>
+            </div>
+
             <div class="grid-4">
                 <div class="card" style="border-left:3px solid var(--ofa-teal);">
                     <div class="kpi-title">Total Leads (30d)</div>
@@ -232,42 +263,43 @@
                 </div>
             </div>
 
-            <!-- NUEVA SECCION DE AGENTES CREADOS -->
-            <div class="card" style="background: linear-gradient(to right, rgba(56, 189, 248, 0.05), transparent);">
-                <div class="card-header">🤖 Nuestros Agentes & Consolas [LIVE]</div>
-                <div class="grid-4" style="gap:1rem;">
-                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
-                        <div style="font-weight:700; font-size:0.9rem;">Elia Web Agent</div>
-                        <div style="font-size:0.7rem; color:var(--slate);">Captación de Leads</div>
-                        <a href="demo_elia.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Demo Hub ↗</a>
-                    </div>
-                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
-                        <div style="font-weight:700; font-size:0.9rem;">Mireia Console</div>
-                        <div style="font-size:0.7rem; color:var(--slate);">Sales & Management</div>
-                        <a href="mireia_dashboard.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Acceso ↗</a>
-                    </div>
-                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
-                        <div style="font-weight:700; font-size:0.9rem;">Jorge Console</div>
-                        <div style="font-size:0.7rem; color:var(--slate);">Operations & Core</div>
-                        <a href="jorge_dashboard.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Acceso ↗</a>
-                    </div>
-                    <div style="padding:10px; border:1px solid var(--border); border-radius:10px; background:var(--bg-card);">
-                        <div style="font-weight:700; font-size:0.9rem;">Vojislav Console</div>
-                        <div style="font-size:0.7rem; color:var(--slate);">Technical Dashboard</div>
-                        <a href="vojislav_dashboard.html" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal); text-decoration:none;">Acceso ↗</a>
-                    </div>
+            <!-- 1.2 MINI EMBUDO DE LEADS -->
+            <div class="card">
+                <div class="card-header">📊 Sales Funnel (Estado de Captación)</div>
+                <div class="funnel-container" id="home-funnel">
+                    <div class="funnel-step"><span class="count" id="fn-new">0</span><span class="label">Nuevo</span></div>
+                    <div class="funnel-step"><span class="count" id="fn-contact">0</span><span class="label">Contactado</span></div>
+                    <div class="funnel-step"><span class="count" id="fn-demo">0</span><span class="label">Demo</span></div>
+                    <div class="funnel-step"><span class="count" id="fn-prop">0</span><span class="label">Propuesta</span></div>
+                    <div class="funnel-step" style="background:rgba(22, 101, 52, 0.05); border-color:#166534;"><span class="count" id="fn-won">0</span><span class="label">Cerrado</span></div>
                 </div>
+                <div id="funnel-insight" style="font-size:0.75rem; color:var(--slate); margin-top:10px; text-align:right; font-style:italic;">Calculando cuello de botella...</div>
             </div>
 
-            <!-- MINI PANEL SEGURIDAD -->
-            <div class="card" id="home-security-panel" style="cursor: pointer; transition: 0.2s; border-left: 4px solid var(--slate-light);" onclick="document.querySelector('.nav-btn[data-mod=\'security\']').click()">
-                <div style="display: flex; align-items: center; gap: 15px;">
-                    <div id="home-sec-icon" style="font-size: 2rem; color: var(--slate-light);">🛡️</div>
-                    <div>
-                        <div style="font-weight: 700; font-size: 1rem;">Seguridad del Sistema</div>
-                        <div id="home-sec-text" style="font-size: 0.85rem; color: var(--slate);">Cargando estado...</div>
+            <!-- 1.3 RIESGOS & COSTES -->
+            <div class="card" id="home-risk-panel" style="background:var(--bg-card); border-top:4px solid var(--ofa-teal);">
+                <div class="card-header">🛡️ Estado de Riesgos & Costes</div>
+                <div class="grid-4" style="gap:1rem;">
+                    <div style="text-align:center;">
+                        <div style="font-size:0.65rem; color:var(--slate); text-transform:uppercase;">SaaS Fijo</div>
+                        <div style="font-weight:700;" id="risk-saas-fijo">€ 104/mo</div>
                     </div>
-                    <div style="margin-left: auto; color: var(--ofa-teal); font-size: 0.8rem; font-weight: 600;">Ver detalles →</div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.65rem; color:var(--slate); text-transform:uppercase;">IA Variable</div>
+                        <div style="font-weight:700; color:var(--ofa-teal);" id="risk-ia-var">--</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.65rem; color:var(--slate); text-transform:uppercase;">Carga CPU</div>
+                        <div style="font-weight:700;" id="risk-cpu">--</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:0.65rem; color:var(--slate); text-transform:uppercase;">Próx. Pago</div>
+                        <div style="font-weight:700; color:var(--status-warn);" id="risk-renewal">--</div>
+                    </div>
+                </div>
+                <div style="text-align:center; margin-top:15px; font-size:0.8rem;">
+                    <span id="risk-summary">Seguridad: OK · CPU: -- · SaaS: € 104/mes</span>
+                    <a href="#" onclick="switchModule('radar', null)" style="color:var(--ofa-teal); margin-left:10px; font-weight:600; text-decoration:none;">Ver Radar ↗</a>
                 </div>
             </div>
 
@@ -302,33 +334,40 @@
 
         <!-- SALES CRM -->
         <section id="module-sales" class="module">
-            <div class="tabs">
-                <div class="tab active" onclick="switchInnerTab('sales', 'hoy', this)">📅 Hoy</div>
-                <div class="tab" onclick="switchInnerTab('sales', 'pipeline', this)">📊 Pipeline</div>
+            <div class="grid-4" style="margin-bottom:1.5rem;">
+                <div class="card"><div class="kpi-title">Leads Nuevos Hoy</div><div class="kpi-val" id="sales-new-today">0</div></div>
+                <div class="card"><div class="kpi-title">Contactados Hoy</div><div class="kpi-val" id="sales-contact-today">0</div></div>
+                <div class="card"><div class="kpi-title">Demos Agendadas</div><div class="kpi-val" id="sales-demos-today">0</div></div>
+                <div class="card" style="background:var(--bg-sidebar); color:white;"><div class="kpi-title" style="color:var(--ofa-teal);">Propuestas Activas</div><div class="kpi-val" id="sales-prop-total">0</div></div>
             </div>
-            <div id="sales-hoy" class="tab-panel active">
+
+            <div class="grid-2-1" style="display:grid; grid-template-columns: 2fr 1fr; gap:1.5rem;">
                 <div class="card">
-                    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                        <span>Lead Feed (Tiempo real)</span>
-                        <select id="crm-source-filter" onchange="fetchData()" style="padding:4px 8px; border-radius:6px; border:1px solid var(--border); font-size:0.75rem; background:var(--white);">
-                            <option value="all">Filtro: Todos</option>
-                            <option value="Elia Web Widget">Elia Web Widget</option>
+                    <div class="card-header" style="display:flex; justify-content:space-between;">
+                        <span>📋 Lead Feed / Pipeline</span>
+                        <select id="crm-source-filter" onchange="fetchData()" style="padding:4px; border-radius:6px; font-size:0.7rem;">
+                            <option value="all">Todos los orígenes</option>
+                            <option value="Elia Web Widget">Elia Web</option>
                             <option value="Directo">Directo</option>
                         </select>
                     </div>
                     <div class="table-wrap">
-                        <table style="width:100%;">
-                            <thead><tr><th>Lead</th><th>Origen</th><th>Estado</th><th>Accion</th></tr></thead>
+                        <table>
+                            <thead><tr><th>Lead / Origen</th><th>Etapa</th><th>Últ. Contacto</th><th>Acción</th></tr></thead>
                             <tbody id="crm-leads-full">
-                                <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Cargando CRM...</td></tr>
+                                <tr><td colspan="4" style="text-align:center; padding:20px;">Cargando CRM...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-            <div id="sales-pipeline" class="tab-panel">
-                <div class="card" style="text-align:center; padding:50px; color:var(--slate);">
-                    Visualización de Pipeline en desarrollo · Use la pestaña 'Hoy' para gestión de datos.
+
+                <div class="card" style="border-top:4px solid var(--ofa-teal);">
+                    <div class="card-header">🤝 Acciones TONY (Ventas)</div>
+                    <div id="tony-suggestions" style="font-size:0.85rem;">
+                        <p style="color:var(--slate); margin-bottom:15px;">Pulsa para evaluar el estado de ventas en Airtable.</p>
+                        <button onclick="runAgentTasks('tony')" class="badge" style="background:var(--ofa-teal); color:white; width:100%; padding:10px; border:none; cursor:pointer; font-weight:700;">Plan de Hoy / Evaluar Leads</button>
+                    </div>
+                    <div id="tony-leads-to-attack" style="margin-top:20px;"></div>
                 </div>
             </div>
         </section>
@@ -354,26 +393,20 @@
                 </div>
             </div>
             <div class="card">
-                <div class="card-header">Base de Datos de Clientes</div>
+                <div class="card-header">Base de Datos de Clientes Operativos</div>
                 <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>Cliente / Empresa</th><th>Producto</th><th>Coste/Mes</th><th>Uso</th><th>Pagos</th><th>Acción</th></tr></thead>
+                    <table id="clients-table-full">
+                        <thead><tr><th>Empresa</th><th>Estado</th><th>Producto</th><th>Siguiente Hito</th><th>Acción</th></tr></thead>
                         <tbody>
                             <tr>
-                                <td><strong>Mireia OFA</strong><br><span style="font-size:0.7rem; color:var(--slate);">ID: 001</span></td>
-                                <td><span class="badge" style="background:#f1f5f9; color:var(--charcoal);">OFA OS + Elia</span></td>
-                                <td>€ 0</td>
-                                <td>95%</td>
-                                <td><span class="badge" style="background:#dcfce7; color:#166534;">AUTO</span></td>
-                                <td><a href="mireia_dashboard.html" class="badge" style="background:var(--ofa-teal); color:white; text-decoration:none;">Ver Dashboard ↗</a></td>
-                            </tr>
-                            <tr>
-                                <td><strong>Jorge Pérez</strong><br><span style="font-size:0.7rem; color:var(--slate);">ID: 002</span></td>
-                                <td><span class="badge" style="background:#f1f5f9; color:var(--charcoal);">OFA Core</span></td>
-                                <td>€ 49/mo</td>
-                                <td>60%</td>
-                                <td><span class="badge" style="background:#fef9c3; color:#854d0e;">PENDING</span></td>
-                                <td><a href="jorge_dashboard.html" class="badge" style="background:var(--ofa-teal); color:white; text-decoration:none;">Ver Dashboard ↗</a></td>
+                                <td><strong>Mireia OFA</strong></td>
+                                <td><span class="badge" style="background:#dcfce7; color:#166534;">PAGANDO</span></td>
+                                <td>OS + Elia</td>
+                                <td>Review Q2</td>
+                                <td>
+                                    <button class="badge" style="background:var(--bg-master); border:1px solid var(--border);">Airtable ↗</button>
+                                    <button class="badge" style="background:var(--ofa-teal); color:white; border:none;" onclick="switchModule('agents', null)">Agentes ↗</button>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -413,36 +446,30 @@
                 <div class="card">
                     <div class="card-header">🤖 Elia Web</div>
                     <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Widget IA para captura de leads B2B en webs OFA.</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:#dcfce7; color:#166534;">PRODUCTION</span>
-                        <a href="https://elia-web.vercel.app" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Acceso ↗</a>
+                    <div style="font-size:0.75rem; margin-bottom:10px;">Venta: <span class="badge" style="background:#dcfce7; color:#166534;">SÍ</span> · Uso: 12 demos</div>
+                    <div style="display:flex; gap:10px;">
+                        <a href="https://elia-web.vercel.app" target="_blank" class="badge" style="background:var(--ofa-teal); color:white; text-decoration:none;">Live ↗</a>
+                        <a href="#" class="badge" style="background:var(--bg-master); border:1px solid var(--border); text-decoration:none; color:var(--charcoal);">Spec Notion ↗</a>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">📲 OFA WhatsApp Agent</div>
-                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de agentes de WhatsApp para negocios locales (respuesta, filtros y agenda simple).</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:#e0f2fe; color:#0ea5e9;">BETA</span>
-                        <a href="whatsapp_agent_builder.html" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de agentes de WhatsApp para negocios locales.</p>
+                    <div style="font-size:0.75rem; margin-bottom:10px;">Venta: <span class="badge" style="background:#e0f2fe; color:#0ea5e9;">BETA</span> · Uso: 4 interesados</div>
+                    <div style="display:flex; gap:10px;">
+                        <a href="whatsapp_agent_builder.html" class="badge" style="background:var(--ofa-teal); color:white; text-decoration:none;">Abrir ↗</a>
+                        <a href="#" class="badge" style="background:var(--bg-master); border:1px solid var(--border); text-decoration:none; color:var(--charcoal);">Spec Notion ↗</a>
                     </div>
                 </div>
 
                 <div class="card">
                     <div class="card-header">🗣️ OFA Voice Agent</div>
-                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de agentes de voz para atender llamadas y enviar resúmenes.</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:#fee2e2; color:#ef4444;">ALPHA</span>
-                        <a href="voice_agent_builder.html" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
-                    </div>
-                </div>
-
-                <div class="card">
-                    <div class="card-header">🏗️ Web Constructor</div>
-                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Crea landings y webs optimizadas para IA en minutos.</p>
-                    <div style="display:flex; justify-content:space-between; align-items:center;">
-                        <span class="badge" style="background:rgba(251,191,36,0.1); color:#92400e;">READY</span>
-                        <a href="https://lovable.dev" target="_blank" style="font-size:0.75rem; color:var(--ofa-teal); text-decoration:none; font-weight:600;">Abrir Constructor ↗</a>
+                    <p style="font-size:0.85rem; color:var(--slate); margin-bottom:15px;">Constructor de agentes de voz para atender llamadas.</p>
+                    <div style="font-size:0.75rem; margin-bottom:10px;">Venta: <span class="badge" style="background:#fee2e2; color:#ef4444;">ALPHA</span> · Uso: 1 demo</div>
+                    <div style="display:flex; gap:10px;">
+                        <a href="voice_agent_builder.html" class="badge" style="background:var(--ofa-teal); color:white; text-decoration:none;">Abrir ↗</a>
+                        <a href="#" class="badge" style="background:var(--bg-master); border:1px solid var(--border); text-decoration:none; color:var(--charcoal);">Spec Notion ↗</a>
                     </div>
                 </div>
             </div>
@@ -649,8 +676,8 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                 <h2 style="font-size: 1.2rem; font-family: var(--font-head); font-weight: 600;">Estado de Seguridad Global</h2>
                 <div style="display: flex; gap: 10px;">
-                    <button onclick="window.open('https://supabase.com/dashboard/project/pzjdruihfqtflugypcgl/advisors', '_blank')" class="badge" style="background:var(--bg-card); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; padding:8px 12px;">Supabase Advisors ↗</button>
-                    <button onclick="window.open('https://n8n.optimumforall.com/credentials', '_blank')" class="badge" style="background:var(--bg-card); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; padding:8px 12px;">n8n Credenciales ↗</button>
+                    <button id="btn-sync-eco" onclick="forceEcosystemSync()" class="badge" style="background:var(--ofa-teal); color:white; border:none; cursor:pointer; padding:8px 16px; font-weight:700;">🔄 Sincronizar Ecosistema Ahora</button>
+                    <button id="btn-opt-vps" onclick="optimizeVPS()" class="badge" style="background:var(--bg-card); color:var(--charcoal); border:1px solid var(--border); cursor:pointer; padding:8px 16px;">⚡ Optimizar VPS</button>
                     <button onclick="registrarIncidenteManual()" class="badge" style="background:var(--status-err); color:white; border:none; cursor:pointer; padding:8px 12px;">+ Registrar Incidente Manual</button>
                 </div>
             </div>
@@ -708,9 +735,12 @@
             </div>
 
             <!-- SALUD DEL ECOSISTEMA (Vercel + GSC) -->
-            <div style="margin-top: 40px; margin-bottom: 20px;">
-                <h2 style="font-size: 1.2rem; font-family: var(--font-head); font-weight: 600;">Salud del Ecosistema & SEO</h2>
-                <p style="font-size: 0.8rem; color: var(--slate);">Métricas combinadas de Vercel Analytics y Google Search Console.</p>
+            <div style="margin-top: 40px; margin-bottom: 20px; display:flex; justify-content:space-between; align-items:flex-end;">
+                <div>
+                    <h2 style="font-size: 1.2rem; font-family: var(--font-head); font-weight: 600;">Salud del Ecosistema & SEO</h2>
+                    <p style="font-size: 0.8rem; color: var(--slate);">Métricas combinadas de Vercel Analytics y Google Search Console.</p>
+                </div>
+                <div id="eco-last-sync" style="font-size:0.7rem; color:var(--slate); font-weight:500;">Última sincronización: --</div>
             </div>
 
             <div class="card" id="eco-insights" style="background: linear-gradient(to right, #f8fafc, #eff6ff); border-left: 4px solid var(--ofa-teal);">
@@ -784,6 +814,29 @@
                             </tbody>
                         </table>
                     </div>
+                    
+                    <div id="seo-alerts-container" style="margin-top: 15px;"></div>
+                </div>
+            </div>
+
+            <!-- SEO RANKING DE PÁGINAS -->
+            <div class="card" style="margin-top: 1rem;">
+                <div class="card-header">🚀 Ranking de Páginas (Top SEO)</div>
+                <div class="table-wrap">
+                    <table style="font-size: 0.8rem;">
+                        <thead>
+                            <tr>
+                                <th>Página</th>
+                                <th>Clicks (28d)</th>
+                                <th>Impresiones</th>
+                                <th>Posición</th>
+                                <th>CTR</th>
+                            </tr>
+                        </thead>
+                        <tbody id="eco-pages-tbody">
+                            <tr><td colspan="5" style="text-align:center; padding:20px; color:var(--slate);">Cargando inventario SEO...</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </section>
@@ -806,7 +859,7 @@
             <!-- HEADER -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
                 <div>
-                    <h2 style="font-size:1.3rem; font-weight:700;">📡 Radar de Costes & Uso del Stack</h2>
+                    <h2 style="font-size:1.3rem; font-weight:700;">Radar de Costes & Uso del Stack</h2>
                     <p style="font-size:0.8rem; color:var(--slate); margin-top:4px;">Seguimiento en tiempo real del gasto por proveedor de IA e infraestructura.</p>
                 </div>
                 <div style="display:flex; gap:10px; align-items:center;">
@@ -931,63 +984,83 @@
         <!-- SETTINGS -->
         <section id="module-settings" class="module">
             <div class="grid-2">
+                <!-- 6.1 PREFERENCIAS -->
                 <div class="card">
-                    <div class="card-header">Sistemas & Interfaz</div>
-                    <div style="display:flex; flex-direction:column; gap:20px;">
+                    <div class="card-header">🕒 Preferencias de Trabajo</div>
+                    <div style="display:flex; flex-direction:column; gap:15px;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="font-weight:600;">Scandinavian Dark Mode</div>
-                                <div style="font-size:0.75rem; color:var(--slate);">Interfaz de alta fidelidad para sesiones nocturnas.</div>
-                            </div>
-                            <button onclick="toggleTheme()" class="badge" style="background:var(--ofa-teal); color:white; border:none; cursor:pointer; padding:8px 15px;">Switch Theme</button>
+                            <div><div style="font-weight:600;">Inicio de Jornada</div><div style="font-size:0.75rem; color:var(--slate);">Para sugerencias de NICK.</div></div>
+                            <input type="time" value="09:00" style="width:100px;">
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <div>
-                                <div style="font-weight:600;">Notificaciones de Lead</div>
-                                <div style="font-size:0.75rem; color:var(--slate);">Aviso visual/sonoro al entrar leads de Elia.</div>
-                            </div>
-                            <input type="checkbox" checked style="width:20px;">
+                            <div><div style="font-weight:600;">Idioma Agentes</div><div style="font-size:0.75rem; color:var(--slate);">Preferencia de respuesta.</div></div>
+                            <select style="width:100px; padding:5px;"><option>ES</option><option>EN</option></select>
                         </div>
                     </div>
                 </div>
+
+                <!-- 6.2 AUTOMATIZACIONES -->
                 <div class="card">
-                    <div class="card-header">Account Details</div>
-                    <div style="font-size:0.85rem; color:var(--slate);">
-                        <p><strong>Org:</strong> Optimum For All</p>
-                        <p><strong>License:</strong> Founders Edition</p>
-                        <p style="margin-top:15px; font-size:0.75rem;">OFA Operating System es la boveda de control central de la factoría.</p>
+                    <div class="card-header">🤖 Agentes & Automatizaciones</div>
+                    <div style="display:flex; flex-direction:column; gap:15px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div><div style="font-weight:600;">Sugerencias TONY</div><div style="font-size:0.75rem; color:var(--slate);">Emails/WA listos para enviar.</div></div>
+                            <input type="checkbox" checked style="width:20px;">
+                        </div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <div><div style="font-weight:600;">Auto-Check NICK</div><div style="font-size:0.75rem; color:var(--slate);">Marcar tareas Airtable (Futuro).</div></div>
+                            <input type="checkbox" style="width:20px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6.3 INTEGRACIONES -->
+                <div class="card" style="grid-column: span 2;">
+                    <div class="card-header">🔌 Estado de Integraciones</div>
+                    <div class="grid-4" style="gap:1rem;">
+                        <div class="funnel-step"><span class="label">Gmail</span><span class="badge" style="background:#dcfce7; color:#166534; display:block; margin-top:5px;">CONECTADO</span></div>
+                        <div class="funnel-step"><span class="label">Airtable</span><span class="badge" style="background:#dcfce7; color:#166534; display:block; margin-top:5px;">CONECTADO</span></div>
+                        <div class="funnel-step"><span class="label">n8n</span><span class="badge" style="background:#dcfce7; color:#166534; display:block; margin-top:5px;">CONECTADO</span></div>
+                        <div class="funnel-step"><span class="label">Supabase</span><span class="badge" style="background:#dcfce7; color:#166534; display:block; margin-top:5px;">CONECTADO</span></div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- AGENTES OFA -->
+        <!-- AGENTES OFA -->
         <section id="module-agents" class="module">
-            <div class="grid-2">
-                <div class="card" style="grid-column: span 2; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: white;">
-                    <h2 style="font-family: var(--font-head); font-weight: 700;">Consola de Agentes Inteligentes</h2>
-                    <p style="opacity: 0.8; font-size: 0.9rem; margin-top: 5px;">Interactúa con los cerebros de OFA de forma manual pegando contexto.</p>
+            <div class="grid-3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1.5rem; margin-bottom:1.5rem;">
+                <!-- TONY -->
+                <div class="card" style="border-top:4px solid #38bdf8;">
+                    <div class="card-header">OFA-TONY (Ventas)</div>
+                    <textarea id="ctx-tony" placeholder="Contexto adicional (ej. resumen de reunión)..." style="width:100%; height:80px; margin-bottom:10px; padding:10px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border);"></textarea>
+                    <button onclick="runAgentTasks('tony')" id="btn-agent-tony" class="badge" style="background:#38bdf8; color:white; border:none; cursor:pointer; width:100%; padding:10px;">Evaluar Tareas Airtable</button>
+                    <div id="hist-tony" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
-                
-                <div class="card">
-                    <div class="card-header">🤝 OFA-TONY (Ventas & CRM)</div>
-                    <textarea id="ctx-tony" placeholder="Pega aquí los leads o transcripción de llamada..." style="width:100%; height:150px; border-radius:8px; border:1px solid var(--border); padding:12px; font-family:var(--font-body); font-size:0.85rem; margin-bottom:15px;"></textarea>
-                    <button onclick="askAgent('ofa_tony', 'ctx-tony', 'res-tony')" id="btn-tony" class="badge" style="background:var(--ofa-teal); color:white; border:none; padding:10px 20px; width:100%; cursor:pointer; font-weight:700;">Preguntar a Tony</button>
-                    <div id="res-tony" class="card" style="margin-top:15px; display:none; background:#f1f5f9; border:none; font-size:0.85rem; line-height:1.5; max-height: 400px; overflow-y: auto;"></div>
+                <!-- NICK -->
+                <div class="card" style="border-top:4px solid #f472b6;">
+                    <div class="card-header">OFA-NICK (Operaciones)</div>
+                    <textarea id="ctx-nick" placeholder="Contexto adicional (ej. errores detectados)..." style="width:100%; height:80px; margin-bottom:10px; padding:10px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border);"></textarea>
+                    <button onclick="runAgentTasks('nick')" id="btn-agent-nick" class="badge" style="background:#f472b6; color:white; border:none; cursor:pointer; width:100%; padding:10px;">Evaluar Tareas Airtable</button>
+                    <div id="hist-nick" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
+                <!-- MIREIA -->
+                <div class="card" style="border-top:4px solid #a78bfa;">
+                    <div class="card-header">JARVIS-Mireia (Estrategia)</div>
+                    <textarea id="ctx-jarvis" placeholder="Contexto adicional (ej. nuevas metas)..." style="width:100%; height:80px; margin-bottom:10px; padding:10px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border);"></textarea>
+                    <button onclick="runAgentTasks('mireia')" id="btn-agent-mireia" class="badge" style="background:#a78bfa; color:white; border:none; cursor:pointer; width:100%; padding:10px;">Evaluar Foco Airtable</button>
+                    <div id="hist-mireia" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
+                </div>
+            </div>
 
-                <div class="card">
-                    <div class="card-header">🚀 OFA-NICK (Operaciones)</div>
-                    <textarea id="ctx-nick" placeholder="Pega tus tareas de hoy y logs de ayer..." style="width:100%; height:150px; border-radius:8px; border:1px solid var(--border); padding:12px; font-family:var(--font-body); font-size:0.85rem; margin-bottom:15px;"></textarea>
-                    <button onclick="askAgent('ofa_nick', 'ctx-nick', 'res-nick')" id="btn-nick" class="badge" style="background:var(--status-prog); color:white; border:none; padding:10px 20px; width:100%; cursor:pointer; font-weight:700;">Preguntar a Nick</button>
-                    <div id="res-nick" class="card" style="margin-top:15px; display:none; background:#f1f5f9; border:none; font-size:0.85rem; line-height:1.5; max-height: 400px; overflow-y: auto;"></div>
+            <div class="card" id="agent-response-card" style="display:none; border-left:4px solid var(--ofa-teal);">
+                <div class="card-header" style="display:flex; justify-content:space-between;">
+                    <span>🤖 Respuesta del Agente: <strong id="agent-name-display">--</strong></span>
+                    <button onclick="copyAgentResponse()" class="badge" style="background:var(--bg-master); border:1px solid var(--border); cursor:pointer;">📋 Copiar Acción</button>
                 </div>
-
-                <div class="card" style="grid-column: span 2;">
-                    <div class="card-header">🧠 JARVIS-Mireia (Estrategia CEO)</div>
-                    <textarea id="ctx-jarvis" placeholder="Pega tu lista de ideas, proyectos o dilemas estratégicos..." style="width:100%; height:100px; border-radius:8px; border:1px solid var(--border); padding:12px; font-family:var(--font-body); font-size:0.85rem; margin-bottom:15px;"></textarea>
-                    <button onclick="askAgent('jarvis_mireia', 'ctx-jarvis', 'res-jarvis')" id="btn-jarvis" class="badge" style="background:#0f172a; color:white; border:none; padding:10px 20px; width:100%; cursor:pointer; font-weight:700;">Consultar a Jarvis</button>
-                    <div id="res-jarvis" class="card" style="margin-top:15px; display:none; background:#f8fafc; border:1px dashed var(--ofa-teal); font-size:0.85rem; line-height:1.5;"></div>
+                <div id="agent-response-content" style="font-size:0.9rem; line-height:1.6; white-space:pre-wrap; padding:15px; background:var(--bg-master); border-radius:10px;">
+                    Analizando...
                 </div>
             </div>
         </section>
@@ -1036,9 +1109,11 @@
                 fetchSecurityData();
                 fetchInboxSummary();
                 fetchEcosystemData();
+                fetchOverviewActions();
             } catch(e) {
                 console.error("Init Error:", e);
                 addLogEntry('System init failure', 'ERR');
+                alert("Error de conexión con el backend: " + e.message + "\nURL: " + BACKEND_URL);
             }
 
             setInterval(() => {
@@ -1047,15 +1122,49 @@
                 fetchInboxSummary();
                 fetchEcosystemData();
             }, 60000);
+            setTimeout(() => fetchOverviewActions(), 2000);
             setTimeout(() => addLogEntry('Elia Widget: Monitoring active', 'WEB'), 1000);
             setTimeout(() => addLogEntry('Security Layer: Verified', 'SEC'), 2000);
         }
 
-        const BACKEND_URL = 'https://api.optimumforall.es';
-        const API_KEY = '8f5263437dee0c97473f2cf583f69cd429595a2f7850e886ebc7b3131ec0e38e';
-        const fetchOpts = { headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' } };
-
         // ---- AGENTS API LOGIC ----
+        async function fetchOverviewActions() {
+            const container = document.getElementById('home-actions-container');
+            const agents = ['tony', 'nick', 'mireia'];
+            const icons = { tony: '🤝', nick: '🚀', mireia: '🧠' };
+            const names = { tony: 'Tony (Ventas)', nick: 'Nick (Ops)', mireia: 'Mireia (CEO)' };
+            
+            try {
+                const promises = agents.map(slug => 
+                    fetch(`${BACKEND_URL}/api/agents/${slug}/tasks`, {
+                        method: 'POST',
+                        headers: fetchOpts.headers,
+                        body: JSON.stringify({ context: "Resumen rápido para el dashboard (máximo 2 líneas de acción)." })
+                    }).then(r => r.json()).catch(e => ({ success: false }))
+                );
+
+                const results = await Promise.all(promises);
+                container.innerHTML = results.map((res, i) => {
+                    const slug = agents[i];
+                    const content = res.success ? res.response.split('\n')[0] : 'Sin tareas pendientes o error de conexión.';
+                    return `
+                    <div class="action-card">
+                        <div class="action-icon">${icons[slug]}</div>
+                        <div class="action-content">
+                            <div class="action-title">${names[slug]}</div>
+                            <div class="action-text">${content}</div>
+                            <div class="action-btns">
+                                <button onclick="switchModule('agents', null); runAgentTasks('${slug}')" class="badge" style="background:var(--ofa-teal); color:white; border:none; cursor:pointer;">Gestionar</button>
+                                <button onclick="alert('Acción completada')" class="badge" style="background:var(--bg-master); border:1px solid var(--border); cursor:pointer;">OK</button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (err) {
+                container.innerHTML = '<div style="color:var(--status-err); padding:20px;">Error al cargar plan de acción.</div>';
+            }
+        }
+
         async function askAgent(slug, inputId, resId) {
             const context = document.getElementById(inputId).value;
             const resDiv = document.getElementById(resId);
@@ -1127,6 +1236,12 @@
             document.getElementById('radar-fixed-total').textContent = `$${fixedTotal.toFixed(2)}`;
             document.getElementById('radar-usage-total').textContent = `$${usageTotal.toFixed(4)}`;
             document.getElementById('radar-providers-count').textContent = `${activeCount} / ${providers.length}`;
+
+            // Update Home Risk Panel
+            document.getElementById('risk-saas-fijo').textContent = `€ ${fixedTotal.toFixed(0)}`;
+            document.getElementById('risk-ia-var').textContent = `$ ${usageTotal.toFixed(2)}`;
+            const renewalSoon = providers.find(p => p.renewal_at);
+            document.getElementById('risk-renewal').textContent = renewalSoon ? renewalSoon.renewal_at : '--';
 
             // Provider cards
             const grid = document.getElementById('radar-provider-grid');
@@ -1227,7 +1342,7 @@
             try {
                 const res = await fetch(`${BACKEND_URL}/api/saas/refresh`, {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${window.localStorage.getItem('ofa_token') || 'test-token'}` }
+                    headers: fetchOpts.headers
                 });
                 await res.json();
                 fetchUsageSummary();
@@ -1282,6 +1397,7 @@
         async function fetchData() {
             try {
                 const resLeads = await fetch(`${BACKEND_URL}/api/crm/leads`, fetchOpts);
+                if (!resLeads.ok) throw new Error(`HTTP Error: ${resLeads.status}`);
                 const { leads } = await resLeads.json();
                 
                 if(leads) {
@@ -1293,6 +1409,30 @@
                     const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
                     const newLeads = leads.filter(l => new Date(l.created_at) > sevenDaysAgo).length;
                     document.getElementById('g-leads-7d').textContent = newLeads;
+
+                    // Funnel Calculation
+                    const funnel = { new: 0, contacted: 0, demo: 0, proposal: 0, won: 0 };
+                    leads.forEach(l => {
+                        if (l.status === 'new') funnel.new++;
+                        else if (l.status === 'contacted') funnel.contacted++;
+                        else if (l.status === 'demo_scheduled') funnel.demo++;
+                        else if (l.status === 'closed_won') funnel.won++;
+                        else if (l.status === 'proposal') funnel.proposal++;
+                    });
+                    document.getElementById('fn-new').textContent = funnel.new;
+                    document.getElementById('fn-contact').textContent = funnel.contacted;
+                    document.getElementById('fn-demo').textContent = funnel.demo;
+                    document.getElementById('fn-prop').textContent = funnel.proposal;
+                    document.getElementById('fn-won').textContent = funnel.won;
+                    
+                    const bottleneck = funnel.new > funnel.contacted * 2 ? "Falta de contacto inicial" : (funnel.contacted > funnel.demo * 2 ? "Fallo en agendación de demos" : "Pipeline fluido");
+                    document.getElementById('funnel-insight').textContent = "Insight: " + bottleneck;
+
+                    // CRM KPIs
+                    const today = new Date().toISOString().split('T')[0];
+                    const newToday = leads.filter(l => l.created_at.startsWith(today)).length;
+                    document.getElementById('sales-new-today').textContent = newToday;
+                    document.getElementById('sales-prop-total').textContent = funnel.proposal;
 
                     // Fetch pending sales tasks count for today KPI
                     const resTasks = await fetch(`${BACKEND_URL}/api/tasks?context=sales&status=pending`, fetchOpts);
@@ -1317,18 +1457,19 @@
                         
                         crmTbody.innerHTML = filteredCRM.slice(0, 20).map(l => `
                             <tr>
-                                <td><strong>${l.name || 'Anónimo'}</strong><div style="font-size:0.7rem; color:var(--slate);">${l.email || l.contact || ''}</div></td>
-                                <td>${l.source || 'Directo'}</td>
+                                <td><strong>${l.name || 'Anónimo'}</strong><div style="font-size:0.7rem; color:var(--slate);">${l.source || 'Directo'}</div></td>
                                 <td>
                                     <select onchange="updateLeadStatus('${l.id}', this.value)" class="badge" style="background:#f1f5f9; color:#475569; border:none; cursor:pointer; font-size:0.65rem;">
-                                        <option value="new" ${l.status === 'new' ? 'selected' : ''}>NEW</option>
-                                        <option value="contacted" ${l.status === 'contacted' ? 'selected' : ''}>CONTACT</option>
+                                        <option value="new" ${l.status === 'new' ? 'selected' : ''}>NUEVO</option>
+                                        <option value="contacted" ${l.status === 'contacted' ? 'selected' : ''}>CONTACTO</option>
                                         <option value="demo_scheduled" ${l.status === 'demo_scheduled' ? 'selected' : ''}>DEMO</option>
-                                        <option value="closed_won" ${l.status === 'closed_won' ? 'selected' : ''}>WON ✓</option>
-                                        <option value="closed_lost" ${l.status === 'closed_lost' ? 'selected' : ''}>LOST</option>
+                                        <option value="proposal" ${l.status === 'proposal' ? 'selected' : ''}>PROPUESTA</option>
+                                        <option value="closed_won" ${l.status === 'closed_won' ? 'selected' : ''}>GANADO ✓</option>
+                                        <option value="closed_lost" ${l.status === 'closed_lost' ? 'selected' : ''}>PERDIDO</option>
                                     </select>
                                 </td>
-                                <td><button onclick="window.open('https://pzjdruihfqtflugypcgl.supabase.co/dashboard/project/pzjdruihfqtflugypcgl/editor', '_blank')" class="badge" style="background:rgba(56,189,248,0.1); color:var(--ofa-teal); border:none; cursor:pointer;">Detalles</button></td>
+                                <td style="font-size:0.75rem; color:var(--slate);">${new Date(l.created_at).toLocaleDateString()}</td>
+                                <td><button onclick="window.open('https://pzjdruihfqtflugypcgl.supabase.co/dashboard/project/pzjdruihfqtflugypcgl/editor', '_blank')" class="badge" style="background:rgba(56,189,248,0.1); color:var(--ofa-teal); border:none; cursor:pointer;">Perfil</button></td>
                             </tr>
                         `).join('');
                     }
@@ -1337,6 +1478,10 @@
                 }
             } catch(e) {
                 console.error("Fetch Error:", e);
+                addLogEntry(`Fetch Error: ${e.message}`, 'ERR');
+                document.getElementById('status-supabase').textContent = 'OFFLINE';
+                document.getElementById('status-supabase').style.background = '#fee2e2';
+                document.getElementById('status-supabase').style.color = '#991b1b';
             }
         }
 
@@ -1514,6 +1659,37 @@
                         `).join('');
                     }
 
+                    // Render SEO Pages Ranking
+                    if (result.data.seo_pages && result.data.seo_pages.length > 0) {
+                        const pTbody = document.getElementById('eco-pages-tbody');
+                        pTbody.innerHTML = result.data.seo_pages.slice(0, 5).map(p => `
+                            <tr>
+                                <td><div style="max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:600;">${p.page_url}</div></td>
+                                <td>${p.last_clicks_28d}</td>
+                                <td>${p.last_impressions_28d.toLocaleString()}</td>
+                                <td>${p.avg_position.toFixed(1)}</td>
+                                <td><span class="badge" style="background:rgba(56,189,248,0.1); color:var(--ofa-teal);">${(p.last_ctr * 100).toFixed(1)}%</span></td>
+                            </tr>
+                        `).join('');
+                    } else {
+                        document.getElementById('eco-pages-tbody').innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--slate);">No hay datos de páginas disponibles. Pulsa sincronizar.</td></tr>`;
+                    }
+
+                    // SEO Alerts Logic
+                    const totalClicks = result.data.seo_pages.reduce((acc, p) => acc + p.last_clicks_28d, 0);
+                    const alertCont = document.getElementById('seo-alerts-container');
+                    if (totalClicks === 0 && result.data.seo_pages.length > 0) {
+                        alertCont.innerHTML = `<div style="background:#fee2e2; border-left:4px solid #ef4444; padding:10px; font-size:0.75rem; border-radius:4px; color:#991b1b;">
+                            <strong>⚠️ Alerta de Google:</strong> No se han detectado clicks en los últimos 28 días. Revisa la indexación en Search Console.
+                        </div>`;
+                    } else if (totalClicks > 0 && totalClicks < 10) {
+                        alertCont.innerHTML = `<div style="background:#fff7ed; border-left:4px solid #f97316; padding:10px; font-size:0.75rem; border-radius:4px; color:#9a3412;">
+                            <strong>⚡ Sugerencia SEO:</strong> El tráfico orgánico es bajo. Considera optimizar los metatítulos de las páginas top.
+                        </div>`;
+                    } else {
+                        alertCont.innerHTML = '';
+                    }
+
                     // Update VPS Health
                     if (result.data.vps_health) {
                         const vps = result.data.vps_health;
@@ -1532,10 +1708,87 @@
                         elRamFill.style.background = vps.memory_percent > 80 ? 'var(--status-err)' : 'var(--status-prog)';
 
                         document.getElementById('vps-disk').textContent = vps.disk_percent;
+                        
+                        // Risk Panel Update
+                        document.getElementById('risk-cpu').textContent = vps.cpu_percent + '%';
+                        const riskSumm = document.getElementById('risk-summary');
+                        if (vps.cpu_percent > 80) riskSumm.innerHTML = '<span style="color:red">⚠️ CARGA CRÍTICA VPS</span>';
+                    }
+
+                    // Update last sync time
+                    if (metrics[0]) {
+                        document.getElementById('eco-last-sync').textContent = `Última sincronización: ${new Date(metrics[0].checked_at).toLocaleString()}`;
                     }
                 }
             } catch (e) {
                 console.error("Ecosystem Fetch Error:", e);
+            }
+        }
+
+        async function forceEcosystemSync() {
+            const btn = document.getElementById('btn-sync-eco');
+            const oldText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '⌛ Sincronizando...';
+            btn.style.opacity = '0.7';
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/security/ecosystem/sync`, {
+                    method: 'POST',
+                    headers: fetchOpts.headers
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = '✅ ¡Sincronizado!';
+                    btn.style.background = 'var(--status-prog)';
+                    fetchEcosystemData(); // Reload data
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (e) {
+                console.error("Manual Sync Error:", e);
+                btn.textContent = '❌ Error';
+                btn.style.background = 'var(--status-err)';
+                alert("Error al sincronizar: " + e.message);
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = oldText;
+                    btn.style.opacity = '1';
+                    btn.style.background = 'var(--ofa-teal)';
+                }, 3000);
+            }
+        }
+
+        async function optimizeVPS() {
+            const btn = document.getElementById('btn-opt-vps');
+            const oldText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = '⌛ Optimizando...';
+            
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/security/ecosystem/optimize`, {
+                    method: 'POST',
+                    headers: fetchOpts.headers
+                });
+                const data = await res.json();
+                if (data.success) {
+                    btn.textContent = '✅ Optimizado';
+                    btn.style.background = 'var(--status-prog)';
+                    btn.style.color = 'white';
+                    addLogEntry('VPS Maintenance: Success', 'SYS');
+                }
+            } catch (e) {
+                console.error("Optimization Error:", e);
+                btn.textContent = '❌ Error';
+                alert("Error al optimizar: " + e.message);
+            } finally {
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.textContent = oldText;
+                    btn.style.background = 'var(--bg-card)';
+                    btn.style.color = 'var(--charcoal)';
+                }, 3000);
             }
         }
 
@@ -1581,25 +1834,29 @@
             const card = document.getElementById('agent-response-card');
             const content = document.getElementById('agent-response-content');
             const nameDisp = document.getElementById('agent-name-display');
-            const sourceBadge = document.getElementById('agent-source-badge');
+            const histDiv = document.getElementById(`hist-${slug}`);
             
             card.style.display = 'block';
-            content.textContent = 'Contactando con el agente y leyendo Airtable...';
+            content.textContent = 'Consultando Airtable y generando plan de acción...';
             nameDisp.textContent = slug.toUpperCase();
+
+            const ctxInput = document.getElementById(`ctx-${slug}`);
+            const extraCtx = ctxInput ? ctxInput.value : "";
 
             try {
                 const res = await fetch(`${BACKEND_URL}/api/agents/${slug}/tasks`, {
                     method: 'POST',
                     headers: fetchOpts.headers,
-                    body: JSON.stringify({ context: "Revisa mi lista de hoy y dame el plan de acción." })
+                    body: JSON.stringify({ context: extraCtx || "Revisa mi lista de hoy y dame el plan de acción." })
                 });
                 const data = await res.json();
                 
                 if (data.success) {
                     content.textContent = data.response;
-                    sourceBadge.textContent = data.source === 'airtable_direct' ? 'Airtable Live' : 'Payload Manual';
-                    sourceBadge.style.background = data.source === 'airtable_direct' ? 'var(--status-prog)' : 'var(--border)';
-                    sourceBadge.style.color = data.source === 'airtable_direct' ? 'white' : 'var(--slate)';
+                    if (histDiv) {
+                        const time = new Date().toLocaleTimeString();
+                        histDiv.innerHTML = `<div>[${time}] Consulta realizada</div>` + histDiv.innerHTML;
+                    }
                 } else {
                     content.textContent = "Error: " + (data.error || "No se pudo obtener respuesta del agente.");
                 }
@@ -1607,6 +1864,12 @@
                 console.error("Agent Error:", err);
                 content.textContent = "Error de conexión con el backend.";
             }
+        }
+
+        function copyAgentResponse() {
+            const content = document.getElementById('agent-response-content').textContent;
+            navigator.clipboard.writeText(content);
+            alert("Acción copiada al portapapeles.");
         }
 
         document.addEventListener('DOMContentLoaded', init);

@@ -499,11 +499,11 @@
         const SUPA_URL = 'https://pzjdruihfqtflugypcgl.supabase.co';
         const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB6amRydWloZnF0Zmx1Z3lwY2dsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY3ODE4NzQsImV4cCI6MjA5MjM1Nzg3NH0.aYY7WaTvKqpFtzZPt2DY4Ag-_KLmBcRhJwLX_lGhKf4';
         
-        const BACKEND_URL = (window.location.hostname === 'os.optimumforall.es') 
+        const BACKEND_URL = (window.location.hostname.includes('optimumforall')) 
             ? 'https://api.optimumforall.es' 
             : 'http://localhost:3001';
         const API_KEY = '8f5263437dee0c97473f2cf583f69cd429595a2f7850e886ebc7b3131ec0e38e';
-        const fetchOpts = { headers: { 'Authorization': `Bearer ${API_KEY}`, 'Content-Type': 'application/json' } };
+        const fetchOpts = { headers: { 'X-API-Key': API_KEY, 'Content-Type': 'application/json' } };
         
         let supa = null;
         let funnelChart = null;
