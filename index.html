@@ -1033,24 +1033,27 @@
             <div class="grid-3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1.5rem; margin-bottom:1.5rem;">
                 <!-- TONY -->
                 <div class="card" style="border-top:4px solid #38bdf8;">
-                    <div class="card-header">OFA-TONY (Ventas)</div>
-                    <textarea id="ctx-tony" placeholder="Contexto adicional (ej. resumen de reunión)..." style="width:100%; height:80px; margin-bottom:10px; padding:10px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border);"></textarea>
-                    <button onclick="runAgentTasks('tony')" id="btn-agent-tony" class="badge" style="background:#38bdf8; color:white; border:none; cursor:pointer; width:100%; padding:10px;">Evaluar Tareas Airtable</button>
-                    <div id="hist-tony" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
+                    <div class="card-header">💼 OFA-TONY (Ventas)</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-bottom:10px;">Ventas & Cierre. Evalúa la vista TONY - Ventas de Airtable.</p>
+                    <textarea id="ctx-tony" placeholder="Contexto adicional (ej. resumen de reunión)..." style="width:100%; height:120px; margin-bottom:10px; padding:10px; font-size:0.85rem; border-radius:12px; border:1px solid var(--border); background:var(--bg-master); color:var(--charcoal);"></textarea>
+                    <button onclick="runAgentTasks('ofa_tony')" id="btn-agent-tony" class="badge" style="background:#38bdf8; color:white; border:none; cursor:pointer; width:100%; padding:12px; font-weight:700;">Evaluar Tareas Airtable</button>
+                    <div id="hist-ofa_tony" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
                 <!-- NICK -->
                 <div class="card" style="border-top:4px solid #f472b6;">
-                    <div class="card-header">OFA-NICK (Operaciones)</div>
-                    <textarea id="ctx-nick" placeholder="Contexto adicional (ej. errores detectados)..." style="width:100%; height:80px; margin-bottom:10px; padding:10px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border);"></textarea>
-                    <button onclick="runAgentTasks('nick')" id="btn-agent-nick" class="badge" style="background:#f472b6; color:white; border:none; cursor:pointer; width:100%; padding:10px;">Evaluar Tareas Airtable</button>
-                    <div id="hist-nick" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
+                    <div class="card-header">🛠️ OFA-NICK (Operaciones)</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-bottom:10px;">Ops & Estabilidad. Evalúa la vista NICK - Ops & Tech.</p>
+                    <textarea id="ctx-nick" placeholder="Contexto adicional (ej. errores detectados)..." style="width:100%; height:120px; margin-bottom:10px; padding:10px; font-size:0.85rem; border-radius:12px; border:1px solid var(--border); background:var(--bg-master); color:var(--charcoal);"></textarea>
+                    <button onclick="runAgentTasks('ofa_nick')" id="btn-agent-nick" class="badge" style="background:#f472b6; color:white; border:none; cursor:pointer; width:100%; padding:12px; font-weight:700;">Evaluar Tareas Airtable</button>
+                    <div id="hist-ofa_nick" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
                 <!-- MIREIA -->
                 <div class="card" style="border-top:4px solid #a78bfa;">
-                    <div class="card-header">JARVIS-Mireia (Estrategia)</div>
-                    <textarea id="ctx-jarvis" placeholder="Contexto adicional (ej. nuevas metas)..." style="width:100%; height:80px; margin-bottom:10px; padding:10px; font-size:0.8rem; border-radius:8px; border:1px solid var(--border);"></textarea>
-                    <button onclick="runAgentTasks('mireia')" id="btn-agent-mireia" class="badge" style="background:#a78bfa; color:white; border:none; cursor:pointer; width:100%; padding:10px;">Evaluar Foco Airtable</button>
-                    <div id="hist-mireia" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
+                    <div class="card-header">🧠 JARVIS-Mireia (Estrategia)</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-bottom:10px;">Estrategia & Foco. Evalúa la vista Mireia - Foco.</p>
+                    <textarea id="ctx-jarvis" placeholder="Contexto adicional (ej. nuevas metas)..." style="width:100%; height:120px; margin-bottom:10px; padding:10px; font-size:0.85rem; border-radius:12px; border:1px solid var(--border); background:var(--bg-master); color:var(--charcoal);"></textarea>
+                    <button onclick="runAgentTasks('jarvis_mireia')" id="btn-agent-mireia" class="badge" style="background:#a78bfa; color:white; border:none; cursor:pointer; width:100%; padding:12px; font-weight:700;">Evaluar Foco Airtable</button>
+                    <div id="hist-jarvis_mireia" style="margin-top:10px; font-size:0.75rem; max-height:100px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
             </div>
 
@@ -1130,9 +1133,9 @@
         // ---- AGENTS API LOGIC ----
         async function fetchOverviewActions() {
             const container = document.getElementById('home-actions-container');
-            const agents = ['tony', 'nick', 'mireia'];
-            const icons = { tony: '🤝', nick: '🚀', mireia: '🧠' };
-            const names = { tony: 'Tony (Ventas)', nick: 'Nick (Ops)', mireia: 'Mireia (CEO)' };
+            const agents = ['ofa_tony', 'ofa_nick', 'jarvis_mireia'];
+            const icons = { ofa_tony: '🤝', ofa_nick: '🚀', jarvis_mireia: '🧠' };
+            const names = { ofa_tony: 'Tony (Ventas)', ofa_nick: 'Nick (Ops)', jarvis_mireia: 'Mireia (CEO)' };
             
             try {
                 const promises = agents.map(slug => 
