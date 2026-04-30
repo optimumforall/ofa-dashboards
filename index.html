@@ -692,6 +692,31 @@
                 <div id="eco-ai-content" style="font-size: 0.85rem; line-height: 1.6; color: var(--charcoal);">Analizando datos del ecosistema...</div>
             </div>
 
+            <!-- HARDWARE & VPS HEALTH -->
+            <div class="card" style="margin-bottom: 1.5rem; border-top: 4px solid var(--status-prog);">
+                <div class="card-header">🖥️ Hardware & VPS Health (Hostinger KVM 1)</div>
+                <div class="grid-3" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+                    <div style="padding: 15px; background: var(--bg-master); border-radius: 10px;">
+                        <div style="font-size: 0.75rem; color: var(--slate); text-transform: uppercase;">CPU Load</div>
+                        <div class="kpi-val" id="vps-cpu" style="font-size: 1.8rem; margin: 5px 0;">--</div>
+                        <div id="vps-cpu-bar" style="height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;">
+                            <div id="vps-cpu-fill" style="height: 100%; width: 0%; background: var(--status-prog); transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+                    <div style="padding: 15px; background: var(--bg-master); border-radius: 10px;">
+                        <div style="font-size: 0.75rem; color: var(--slate); text-transform: uppercase;">Memoria RAM</div>
+                        <div class="kpi-val" id="vps-ram" style="font-size: 1.8rem; margin: 5px 0;">--</div>
+                        <div id="vps-ram-bar" style="height: 4px; background: var(--border); border-radius: 2px; overflow: hidden;">
+                            <div id="vps-ram-fill" style="height: 100%; width: 0%; background: var(--status-prog); transition: width 0.5s;"></div>
+                        </div>
+                    </div>
+                    <div style="padding: 15px; background: var(--bg-master); border-radius: 10px;">
+                        <div style="font-size: 0.75rem; color: var(--slate); text-transform: uppercase;">Disco (50GB)</div>
+                        <div class="kpi-val" id="vps-disk" style="font-size: 1.8rem; margin: 5px 0;">--</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid-2">
                 <!-- Bloque A: Salud Técnica -->
                 <div class="card">
@@ -1461,6 +1486,26 @@
                                 <td>${(q.ctr * 100).toFixed(1)}%</td>
                             </tr>
                         `).join('');
+                    }
+
+                    // Update VPS Health
+                    if (result.data.vps_health) {
+                        const vps = result.data.vps_health;
+                        const elCpu = document.getElementById('vps-cpu');
+                        const elCpuFill = document.getElementById('vps-cpu-fill');
+                        elCpu.textContent = vps.cpu_percent + '%';
+                        elCpuFill.style.width = vps.cpu_percent + '%';
+                        elCpu.style.color = vps.cpu_percent > 80 ? 'var(--status-err)' : (vps.cpu_percent > 60 ? 'var(--status-warn)' : 'var(--charcoal)');
+                        elCpuFill.style.background = vps.cpu_percent > 80 ? 'var(--status-err)' : (vps.cpu_percent > 60 ? 'var(--status-warn)' : 'var(--status-prog)');
+
+                        const elRam = document.getElementById('vps-ram');
+                        const elRamFill = document.getElementById('vps-ram-fill');
+                        elRam.textContent = vps.memory_percent + '%';
+                        elRamFill.style.width = vps.memory_percent + '%';
+                        elRam.style.color = vps.memory_percent > 80 ? 'var(--status-err)' : 'var(--charcoal)';
+                        elRamFill.style.background = vps.memory_percent > 80 ? 'var(--status-err)' : 'var(--status-prog)';
+
+                        document.getElementById('vps-disk').textContent = vps.disk_percent;
                     }
                 }
             } catch (e) {
