@@ -836,17 +836,17 @@
             </div>
 
             <!-- STATIC SAAS COSTS (known fixed costs not yet in DB) -->
-            <div class="card" style="margin-top:1.5rem; background:linear-gradient(to right, #f8fafc, #eff6ff);">
+            <div class="card" style="margin-top:1.5rem; background: var(--bg-card); border-top: 4px solid var(--ofa-teal);">
                 <div class="card-header">💰 Costes SaaS Manuales Confirmados</div>
                 <div class="table-wrap">
                     <table>
                         <thead><tr><th>Herramienta</th><th>Uso</th><th style="text-align:right;">€/mes</th><th>Estado</th></tr></thead>
                         <tbody>
-                            <tr><td><strong>Hostinger VPS</strong></td><td>Backend + n8n</td><td style="text-align:right;">~7 €</td><td><span class="badge" style="background:#dcfce7; color:#166534;">ACTIVO</span></td></tr>
-                            <tr><td><strong>ManyChat</strong></td><td>Marketing automation</td><td style="text-align:right;">12 €</td><td><span class="badge" style="background:#dcfce7; color:#166534;">ACTIVO</span></td></tr>
-                            <tr><td><strong>Skool Academy</strong></td><td>Formación IA</td><td style="text-align:right;">64 €</td><td><span class="badge" style="background:#fef9c3; color:#854d0e;">REVISAR</span></td></tr>
-                            <tr><td><strong>AI Blueprint Plus</strong></td><td>Formación IA</td><td style="text-align:right;">21 €</td><td><span class="badge" style="background:#fef9c3; color:#854d0e;">REVISAR</span></td></tr>
-                            <tr><td><strong>Claude / OpenAI (APIs)</strong></td><td>Core LLMs</td><td style="text-align:right;">~25 €</td><td><span class="badge" style="background:#e0f2fe; color:#0ea5e9;">VARIABLE</span></td></tr>
+                            <tr><td><strong>Hostinger VPS</strong></td><td>Backend + n8n</td><td style="text-align:right;">~7 €</td><td><span class="badge" style="background:var(--status-prog); color:white;">ACTIVO</span></td></tr>
+                            <tr><td><strong>ManyChat</strong></td><td>Marketing automation</td><td style="text-align:right;">12 €</td><td><span class="badge" style="background:var(--status-prog); color:white;">ACTIVO</span></td></tr>
+                            <tr><td><strong>Skool Academy</strong></td><td>Formación IA</td><td style="text-align:right;">64 €</td><td><span class="badge" style="background:var(--status-warn); color:white;">REVISAR</span></td></tr>
+                            <tr><td><strong>AI Blueprint Plus</strong></td><td>Formación IA</td><td style="text-align:right;">21 €</td><td><span class="badge" style="background:var(--status-warn); color:white;">REVISAR</span></td></tr>
+                            <tr><td><strong>Claude / OpenAI (APIs)</strong></td><td>Core LLMs</td><td style="text-align:right;">~25 €</td><td><span class="badge" style="background:var(--ofa-teal); color:white;">VARIABLE</span></td></tr>
                             <tr style="border-top:2px solid var(--border);"><td><strong>Total Actual</strong></td><td></td><td style="text-align:right;"><strong style="color:var(--status-warn);">~129 €</strong></td><td></td></tr>
                         </tbody>
                     </table>
@@ -1085,7 +1085,7 @@
                 const billingBadge = p.fixed_monthly > 0 && p.usage_cost_month > 0 ? 'Mixto' : p.fixed_monthly > 0 ? 'Fijo' : 'Variable';
                 return `<tr>
                     <td><strong>${p.icon || ''} ${p.name}</strong><br><a href="${p.website || '#'}" target="_blank" style="font-size:0.7rem; color:var(--ofa-teal);">Web ↗</a></td>
-                    <td><span class="badge" style="background:#f1f5f9; color:var(--charcoal);">${p.category || '--'}</span></td>
+                    <td><span class="badge" style="background:var(--border); color:var(--text);">${p.category || '--'}</span></td>
                     <td>${billingBadge}</td>
                     <td style="text-align:right;">${p.fixed_monthly > 0 ? `$${p.fixed_monthly}` : '--'}</td>
                     <td style="text-align:right;">${p.usage_cost_month > 0 ? `$${p.usage_cost_month.toFixed(4)}` : '--'}</td>
