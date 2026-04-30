@@ -788,6 +788,29 @@
                 </div>
             </div>
 
+            <!-- SAAS ALERTS & SYNC MODULE -->
+            <div class="card" style="margin-bottom:1.5rem; border-top: 4px solid #a78bfa;">
+                <div class="card-header" style="display:flex; justify-content:space-between;">
+                    <span>🛡️ Contratos SaaS & Estado de Sync</span>
+                    <button onclick="refreshSaaSData()" id="btn-sync-saas" class="badge" style="background:#a78bfa; color:white; border:none; cursor:pointer;">⚡ Sincronizar Ahora</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Servicio</th>
+                                <th>Estado / Notas</th>
+                                <th style="text-align:right;">Próxima Renovación</th>
+                                <th style="text-align:right;">Último Check</th>
+                            </tr>
+                        </thead>
+                        <tbody id="saas-sync-tbody">
+                            <tr><td colspan="4" style="text-align:center; padding:20px; color:var(--slate);">Cargando estado...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- PROVIDER CARDS -->
             <div id="radar-provider-grid" class="radar-provider-grid">
                 <!-- Filled by JS -->
@@ -1093,6 +1116,26 @@
                     <td style="text-align:right; font-weight:700;">$${p.total_estimated.toFixed(2)}</td>
                 </tr>`;
             }).join('');
+
+            // Render SaaS Sync block
+            const saasTbody = document.getElementById('saas-sync-tbody');
+            saasTbody.innerHTML = providers.map(p => {
+                let renewalBadge = '--';
+                if (p.renewal_at) {
+                    const diffDays = Math.ceil((new Date(p.renewal_at) - new Date()) / (1000 * 60 * 60 * 24));
+                    if (diffDays < 7) renewalBadge = `<span class="badge" style="background:var(--status-err); color:white;">En ${diffDays} días</span>`;
+                    else if (diffDays < 30) renewalBadge = `<span class="badge" style="background:var(--status-warn); color:white;">En ${diffDays} días</span>`;
+                    else renewalBadge = `<span class="badge" style="background:var(--bg-app); color:var(--text);">${p.renewal_at}</span>`;
+                }
+                const lastCheck = p.last_check ? new Date(p.last_check).toLocaleString('es-ES') : 'Nunca';
+                
+                return `<tr>
+                    <td><strong>${p.icon || ''} ${p.name}</strong></td>
+                    <td style="font-size:0.8rem; color:var(--slate);">${p.notes || 'Sin datos de sync'}</td>
+                    <td style="text-align:right;">${renewalBadge}</td>
+                    <td style="text-align:right; font-size:0.75rem; color:var(--slate);">${lastCheck}</td>
+                </tr>`;
+            }).join('');
         }
 
         function renderUsageLogs(logs) {
@@ -1124,6 +1167,23 @@
             } catch (err) {
                 console.error("Inbox Fetch Error:", err);
                 document.getElementById('home-inbox-tbody').innerHTML = `<tr><td colspan="2" style="color:red; text-align:center;">Error al cargar Inbox</td></tr>`;
+            }
+        }
+
+        async function refreshSaaSData() {
+            const btn = document.getElementById('btn-sync-saas');
+            if(btn) btn.innerText = 'Sincronizando...';
+            try {
+                const res = await fetch(`${BACKEND_URL}/api/saas/refresh`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${window.localStorage.getItem('ofa_token') || 'test-token'}` }
+                });
+                await res.json();
+                fetchUsageSummary();
+            } catch (err) {
+                console.error('Error refreshing SaaS:', err);
+            } finally {
+                if(btn) btn.innerText = '⚡ Sincronizar Ahora';
             }
         }
 
