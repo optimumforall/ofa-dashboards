@@ -503,32 +503,38 @@
         <!-- AGENTES OFA -->
         <section id="module-agents" class="module">
             <div class="grid-3" style="display:grid; grid-template-columns:repeat(3, 1fr); gap:1.5rem; margin-bottom:1.5rem;">
+                <!-- TONY -->
                 <div class="card" style="border-top:4px solid #38bdf8;">
-                    <div style="font-size:2rem; margin-bottom:10px;">💼</div>
-                    <div class="card-header">OFA-TONY</div>
-                    <p style="font-size:0.8rem; color:var(--slate); min-height:40px;">Ventas & Cierre. Evalúa la vista TONY - Ventas de Airtable.</p>
-                    <button onclick="runAgentTasks('tony')" id="btn-agent-tony" class="badge" style="background:#38bdf8; color:white; border:none; cursor:pointer; width:100%; padding:10px; margin-top:10px;">Evaluar Tareas Airtable</button>
+                    <div class="card-header">💼 OFA-TONY (Ventas)</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-bottom:10px;">Ventas &amp; Cierre. Evalúa la vista TONY - Ventas de Airtable.</p>
+                    <textarea id="ctx-tony" placeholder="Contexto adicional (ej. resumen de reunión)..." style="width:100%; height:120px; margin-bottom:10px; padding:10px; font-size:0.85rem; border-radius:12px; border:1px solid var(--border); background:var(--bg-master); color:var(--charcoal); resize:vertical;"></textarea>
+                    <button onclick="runAgentTasks('ofa_tony')" id="btn-agent-tony" class="badge" style="background:#38bdf8; color:white; border:none; cursor:pointer; width:100%; padding:12px; font-weight:700;">Evaluar Tareas Airtable</button>
+                    <div id="hist-ofa_tony" style="margin-top:10px; font-size:0.75rem; max-height:80px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
+                <!-- NICK -->
                 <div class="card" style="border-top:4px solid #f472b6;">
-                    <div style="font-size:2rem; margin-bottom:10px;">🛠️</div>
-                    <div class="card-header">OFA-NICK</div>
-                    <p style="font-size:0.8rem; color:var(--slate); min-height:40px;">Ops & Estabilidad. Evalúa la vista NICK - Ops & Tech.</p>
-                    <button onclick="runAgentTasks('nick')" id="btn-agent-nick" class="badge" style="background:#f472b6; color:white; border:none; cursor:pointer; width:100%; padding:10px; margin-top:10px;">Evaluar Tareas Airtable</button>
+                    <div class="card-header">🛠️ OFA-NICK (Operaciones)</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-bottom:10px;">Ops &amp; Estabilidad. Evalúa la vista NICK - Ops &amp; Tech.</p>
+                    <textarea id="ctx-nick" placeholder="Contexto adicional (ej. errores detectados)..." style="width:100%; height:120px; margin-bottom:10px; padding:10px; font-size:0.85rem; border-radius:12px; border:1px solid var(--border); background:var(--bg-master); color:var(--charcoal); resize:vertical;"></textarea>
+                    <button onclick="runAgentTasks('ofa_nick')" id="btn-agent-nick" class="badge" style="background:#f472b6; color:white; border:none; cursor:pointer; width:100%; padding:12px; font-weight:700;">Evaluar Tareas Airtable</button>
+                    <div id="hist-ofa_nick" style="margin-top:10px; font-size:0.75rem; max-height:80px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
+                <!-- MIREIA -->
                 <div class="card" style="border-top:4px solid #a78bfa;">
-                    <div style="font-size:2rem; margin-bottom:10px;">🧠</div>
-                    <div class="card-header">JARVIS-Mireia</div>
-                    <p style="font-size:0.8rem; color:var(--slate); min-height:40px;">Estrategia & Foco. Evalúa la vista Mireia - Foco.</p>
-                    <button onclick="runAgentTasks('mireia')" id="btn-agent-mireia" class="badge" style="background:#a78bfa; color:white; border:none; cursor:pointer; width:100%; padding:10px; margin-top:10px;">Evaluar Tareas Airtable</button>
+                    <div class="card-header">🧠 JARVIS-Mireia (Estrategia)</div>
+                    <p style="font-size:0.75rem; color:var(--slate); margin-bottom:10px;">Estrategia &amp; Foco. Evalúa la vista Mireia - Foco.</p>
+                    <textarea id="ctx-jarvis" placeholder="Contexto adicional (ej. nuevas metas)..." style="width:100%; height:120px; margin-bottom:10px; padding:10px; font-size:0.85rem; border-radius:12px; border:1px solid var(--border); background:var(--bg-master); color:var(--charcoal); resize:vertical;"></textarea>
+                    <button onclick="runAgentTasks('jarvis_mireia')" id="btn-agent-mireia" class="badge" style="background:#a78bfa; color:white; border:none; cursor:pointer; width:100%; padding:12px; font-weight:700;">Evaluar Foco Airtable</button>
+                    <div id="hist-jarvis_mireia" style="margin-top:10px; font-size:0.75rem; max-height:80px; overflow-y:auto; color:var(--slate);"></div>
                 </div>
             </div>
 
             <div class="card" id="agent-response-card" style="display:none; border-left:4px solid var(--ofa-teal);">
                 <div class="card-header" style="display:flex; justify-content:space-between;">
                     <span>🤖 Respuesta del Agente: <strong id="agent-name-display">--</strong></span>
-                    <span id="agent-source-badge" class="badge" style="background:var(--border); color:var(--slate);">Airtable Sync</span>
+                    <button onclick="copyAgentResponse()" class="badge" style="background:var(--bg-master); border:1px solid var(--border); cursor:pointer;">📋 Copiar Acción</button>
                 </div>
-                <div id="agent-response-content" style="font-size:0.9rem; line-height:1.6; white-space:pre-wrap; padding:10px; background:var(--bg-master); border-radius:10px; border:1px solid var(--border);">
+                <div id="agent-response-content" style="font-size:0.9rem; line-height:1.6; white-space:pre-wrap; padding:15px; background:var(--bg-master); border-radius:10px; border:1px solid var(--border);">
                     Analizando tareas...
                 </div>
             </div>
@@ -1518,26 +1524,27 @@
             try {
                 // Fetch summary for mini-panel
                 const resAlerts = await fetch(`${BACKEND_URL}/api/security/alerts`, fetchOpts);
-                const { alerts } = await resAlerts.json();
+                const alertsResult = await resAlerts.json();
+                const alerts = alertsResult.alerts || [];
                 
                 const criticals = alerts.filter(a => a.severity === 'critical').length;
                 const warnings = alerts.filter(a => a.severity === 'warning').length;
                 
-                // Update home mini-panel
+                // Update home mini-panel (with null guards)
                 const homePanel = document.getElementById('home-security-panel');
                 const homeIcon = document.getElementById('home-sec-icon');
                 const homeText = document.getElementById('home-sec-text');
                 
-                if (criticals > 0) {
+                if (homePanel && criticals > 0) {
                     homePanel.style.borderLeftColor = 'var(--status-err)';
-                    homeIcon.style.color = 'var(--status-err)';
-                    homeText.textContent = `CRÍTICO: ${criticals} alertas abiertas. Actúa inmediatamente.`;
-                } else if (warnings > 0) {
+                    if (homeIcon) homeIcon.style.color = 'var(--status-err)';
+                    if (homeText) homeText.textContent = `CRÍTICO: ${criticals} alertas abiertas. Actúa inmediatamente.`;
+                } else if (homePanel && warnings > 0) {
                     homePanel.style.borderLeftColor = 'var(--status-warn)';
-                    homeIcon.style.color = 'var(--status-warn)';
-                    homeText.textContent = `Atención: ${warnings} avisos pendientes de revisión.`;
-                } else {
-                    homePanel.style.borderLeftColor = 'var(--status-prog)'; // verde/azul ok
+                    if (homeIcon) homeIcon.style.color = 'var(--status-warn)';
+                    if (homeText) homeText.textContent = `Atención: ${warnings} avisos pendientes de revisión.`;
+                } else if (homePanel) {
+                    homePanel.style.borderLeftColor = 'var(--status-prog)';
                     homeIcon.style.color = 'var(--status-prog)';
                     homeText.textContent = `OK: Sin alertas críticas ni avisos.`;
                 }
@@ -1628,38 +1635,54 @@
                     // Render AI Insights
                     document.getElementById('eco-ai-content').innerHTML = ai_insights.replace(/\n/g, '<br>');
 
-                    // Helper to find metric
-                    const getVal = (m) => metrics.find(x => x.metric === m);
+                    // Read direct columns from ecosystem_health table (visits_7d, error_rate_pct, etc)
+                    const row = metrics[0]; // latest row
+                    if (row) {
+                        const trafficEl = document.getElementById('eco-traffic');
+                        if (trafficEl) trafficEl.textContent = row.visits_7d != null ? row.visits_7d.toLocaleString() : '--';
+                        
+                        const errEl = document.getElementById('eco-errors');
+                        if (errEl) {
+                            const errRate = row.error_rate_pct || 0;
+                            errEl.textContent = errRate + '%';
+                            errEl.style.color = errRate > 5 ? 'var(--status-err)' : (errRate > 1 ? 'var(--status-warn)' : 'var(--status-prog)');
+                        }
 
-                    // Update UI (Technical)
-                    const traffic = getVal('traffic_7d');
-                    if (traffic) document.getElementById('eco-traffic').textContent = traffic.value.toLocaleString();
-                    
-                    const errors = getVal('api_error_rate_24h');
-                    if (errors) {
-                        const el = document.getElementById('eco-errors');
-                        el.textContent = errors.value + '%';
-                        el.style.color = errors.value > 5 ? 'var(--status-err)' : (errors.value > 1 ? 'var(--status-warn)' : 'var(--status-prog)');
+                        const respEl = document.getElementById('eco-resp-time');
+                        if (respEl && row.avg_response_time_ms) respEl.textContent = row.avg_response_time_ms + ' ms';
+
+                        const cwvEl = document.getElementById('eco-cwv');
+                        if (cwvEl && row.core_web_vitals) cwvEl.textContent = row.core_web_vitals;
+
+                        // Last sync time
+                        const syncEl = document.getElementById('eco-last-sync');
+                        if (syncEl && row.checked_at) syncEl.textContent = `Última sincronización: ${new Date(row.checked_at).toLocaleString()}`;
                     }
 
-                    // Update UI (SEO)
-                    const clicks = getVal('seo_clicks_28d');
-                    if (clicks) document.getElementById('eco-clicks').textContent = clicks.value;
-                    
-                    const pos = getVal('seo_avg_position_28d');
-                    if (pos) document.getElementById('eco-pos').textContent = pos.value;
+                    // SEO data from seo_pages aggregation
+                    if (result.data.seo_pages && result.data.seo_pages.length > 0) {
+                        const totalClicks = result.data.seo_pages.reduce((s, p) => s + (p.last_clicks_28d || 0), 0);
+                        const avgPos = (result.data.seo_pages.reduce((s, p) => s + (p.avg_position || 0), 0) / result.data.seo_pages.length).toFixed(1);
+                        const clicksEl = document.getElementById('eco-clicks');
+                        const posEl = document.getElementById('eco-pos');
+                        if (clicksEl) clicksEl.textContent = totalClicks.toLocaleString();
+                        if (posEl) posEl.textContent = avgPos;
 
-                    // Render Top Queries if available in details of some metric
-                    const topQueries = metrics.find(x => x.details && x.details.top_queries);
-                    if (topQueries) {
+                        // Top queries table
                         const qTbody = document.getElementById('eco-queries-tbody');
-                        qTbody.innerHTML = topQueries.details.top_queries.slice(0, 5).map(q => `
-                            <tr>
-                                <td>${q.query}</td>
-                                <td>${q.clicks}</td>
-                                <td>${(q.ctr * 100).toFixed(1)}%</td>
-                            </tr>
-                        `).join('');
+                        if (qTbody) {
+                            const topPages = result.data.seo_pages.slice(0, 5);
+                            qTbody.innerHTML = topPages.map(p => `
+                                <tr>
+                                    <td>${p.query || p.page_url || '--'}</td>
+                                    <td>${p.last_clicks_28d || 0}</td>
+                                    <td>${((p.last_ctr || 0) * 100).toFixed(1)}%</td>
+                                </tr>
+                            `).join('');
+                        }
+                    } else {
+                        const qTbody = document.getElementById('eco-queries-tbody');
+                        if (qTbody) qTbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color:var(--slate);">Sin datos. Pulsa "Sincronizar".</td></tr>';
                     }
 
                     // Render SEO Pages Ranking
@@ -1843,7 +1866,10 @@
             content.textContent = 'Consultando Airtable y generando plan de acción...';
             nameDisp.textContent = slug.toUpperCase();
 
-            const ctxInput = document.getElementById(`ctx-${slug}`);
+            // Map slug to textarea ID (ctx-tony, ctx-nick, ctx-jarvis)
+            const ctxIdMap = { 'ofa_tony': 'ctx-tony', 'ofa_nick': 'ctx-nick', 'jarvis_mireia': 'ctx-jarvis' };
+            const ctxId = ctxIdMap[slug] || `ctx-${slug}`;
+            const ctxInput = document.getElementById(ctxId);
             const extraCtx = ctxInput ? ctxInput.value : "";
 
             try {
